@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Stats from "@/components/widgets/Stats";
 import TradeCalendar from "@/components/widgets/TradeCalendar";
-import ProfitChart from "@/components/widgets/ProfitChart";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -47,10 +46,6 @@ export default function Dashboard() {
           onMonthChange={setSelectedMonth}
           filter={filter}
         />
-      </Card>
-
-      <Card className="p-6">
-        <ProfitChart trades={trades || []} />
       </Card>
     </div>
   );
