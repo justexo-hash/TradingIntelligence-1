@@ -23,9 +23,12 @@ export default function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-black border-r border-[rgb(var(--solana-green))/0.2]">
       <div className="flex h-16 items-center px-6 border-b border-[rgb(var(--solana-green))/0.2]">
-        <h1 className="text-xl font-bold text-gradient">
-          Solana Trading Pal
-        </h1>
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Logo" className="h-8 w-8 mr-2" />
+          <h1 className="text-xl font-bold text-gradient">
+            Solana Trading Pal
+          </h1>
+        </div>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
