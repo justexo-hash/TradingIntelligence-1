@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const folders = [
   { value: "daily", label: "Daily Reviews" },
@@ -31,6 +34,8 @@ const folders = [
 ];
 
 export default function JournalForm() {
+  const { toast } = useToast();
+
   const form = useForm({
     resolver: zodResolver(insertJournalSchema),
     defaultValues: {
@@ -46,7 +51,24 @@ export default function JournalForm() {
       return apiRequest("POST", "/api/journals", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/journals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/journals/1"] });
+      toast({
+        title: "Success",
+        description: "Journal entry saved successfully.",
+      });
+      form.reset();
+      // Find and click the DialogClose button
+      const closeButton = document.querySelector('[data-button="close"]');
+      if (closeButton instanceof HTMLElement) {
+        closeButton.click();
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save journal entry. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -119,9 +141,19 @@ export default function JournalForm() {
             )}
           />
 
-          <Button type="submit" className="w-full">
-            Save Entry
-          </Button>
+          <div className="flex justify-end gap-4">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" data-button="close">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={journalMutation.isPending}>
+              {journalMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Save Entry
+            </Button>
+          </div>
         </form>
       </Form>
     </DialogContent>
