@@ -2,35 +2,73 @@ import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Journal from "@/pages/Journal";
 import Trades from "@/pages/Trades";
 import Insights from "@/pages/Insights";
+import AuthPage from "@/pages/auth";
 import Sidebar from "@/components/layout/Sidebar";
 
-function Router() {
+function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-6">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/journal" component={Journal} />
-          <Route path="/trades" component={Trades} />
-          <Route path="/insights" component={Insights} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
+      <main className="flex-1 overflow-y-auto p-6">{children}</main>
     </div>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute
+        path="/"
+        component={() => (
+          <ProtectedLayout>
+            <Dashboard />
+          </ProtectedLayout>
+        )}
+      />
+      <ProtectedRoute
+        path="/journal"
+        component={() => (
+          <ProtectedLayout>
+            <Journal />
+          </ProtectedLayout>
+        )}
+      />
+      <ProtectedRoute
+        path="/trades"
+        component={() => (
+          <ProtectedLayout>
+            <Trades />
+          </ProtectedLayout>
+        )}
+      />
+      <ProtectedRoute
+        path="/insights"
+        component={() => (
+          <ProtectedLayout>
+            <Insights />
+          </ProtectedLayout>
+        )}
+      />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

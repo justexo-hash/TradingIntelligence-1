@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 import {
   LayoutDashboard,
   BookText,
@@ -17,6 +18,7 @@ const navigation = [
 
 export default function Sidebar() {
   const [location] = useLocation();
+  const { logoutMutation } = useAuth();
 
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-border">
@@ -53,7 +55,10 @@ export default function Sidebar() {
         })}
       </nav>
       <div className="border-t border-border p-4">
-        <button className="flex w-full items-center px-4 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md">
+        <button
+          onClick={() => logoutMutation.mutate()}
+          className="flex w-full items-center px-4 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md"
+        >
           <LogOut className="mr-3 h-5 w-5" />
           Sign Out
         </button>

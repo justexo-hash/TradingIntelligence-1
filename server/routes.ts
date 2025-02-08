@@ -4,16 +4,18 @@ import { storage } from "./storage";
 import { insertTradeSchema, insertJournalSchema } from "@shared/schema";
 import { generateTradeInsights } from "./ai";
 import { z } from "zod";
+import { setupAuth } from "./auth";
 
 const generateInsightsSchema = z.object({
   userId: z.number(),
 });
 
 export function registerRoutes(app: Express) {
-  const api = app;
+  // Set up authentication routes and middleware
+  setupAuth(app);
 
   // Trades
-  api.post("/api/trades", async (req, res) => {
+  app.post("/api/trades", async (req, res) => {
     try {
       const trade = insertTradeSchema.parse(req.body);
       const result = await storage.createTrade(trade);
@@ -23,7 +25,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  api.get("/api/trades/:userId", async (req, res) => {
+  app.get("/api/trades/:userId", async (req, res) => {
     try {
       const trades = await storage.getTradesByUser(Number(req.params.userId));
       res.json(trades);
@@ -32,20 +34,8 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  api.get("/api/trades/:userId/:date", async (req, res) => {
-    try {
-      const trades = await storage.getTradesByDate(
-        Number(req.params.userId),
-        new Date(req.params.date),
-      );
-      res.json(trades);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch trades" });
-    }
-  });
-
   // Journals
-  api.post("/api/journals", async (req, res) => {
+  app.post("/api/journals", async (req, res) => {
     try {
       const journal = insertJournalSchema.parse(req.body);
       const result = await storage.createJournal(journal);
@@ -55,7 +45,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  api.get("/api/journals/:userId", async (req, res) => {
+  app.get("/api/journals/:userId", async (req, res) => {
     try {
       const journals = await storage.getJournalsByUser(Number(req.params.userId));
       res.json(journals);
@@ -65,7 +55,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Insights
-  api.post("/api/insights/generate", async (req, res) => {
+  app.post("/api/insights/generate", async (req, res) => {
     try {
       const { userId } = generateInsightsSchema.parse(req.body);
       const trades = await storage.getTradesByUser(userId);
@@ -86,7 +76,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  api.get("/api/insights/:userId", async (req, res) => {
+  app.get("/api/insights/:userId", async (req, res) => {
     try {
       const insights = await storage.getInsightsByUser(Number(req.params.userId));
       res.json(insights);
