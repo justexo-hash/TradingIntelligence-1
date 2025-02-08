@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import type { Trade } from "@shared/schema";
 import { type DayContentProps } from "react-day-picker";
+import DayDetails from "./DayDetails";
 
 interface TradeCalendarProps {
   trades: Trade[];
@@ -22,6 +24,8 @@ export default function TradeCalendar({
   onMonthChange,
   filter,
 }: TradeCalendarProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const tradesByDate = trades?.reduce((acc: Record<string, TradeDay>, trade: Trade) => {
     const date = new Date(trade.date).toDateString();
     if (!acc[date]) {
@@ -52,11 +56,11 @@ export default function TradeCalendar({
           "w-full h-full p-2",
           filter === "pnl"
             ? dayTrades.pnl > 0
-              ? "bg-green-100 dark:bg-green-900/20"
-              : "bg-red-100 dark:bg-red-900/20"
+              ? "bg-[rgb(var(--solana-green))/0.1]"
+              : "bg-red-900/20"
             : winRate >= 50
-            ? "bg-green-100 dark:bg-green-900/20"
-            : "bg-red-100 dark:bg-red-900/20"
+            ? "bg-[rgb(var(--solana-green))/0.1]"
+            : "bg-red-900/20"
         )}
       >
         <div className="font-normal">{date.getDate()}</div>
@@ -71,23 +75,43 @@ export default function TradeCalendar({
   };
 
   return (
-    <Calendar
-      mode="single"
-      selected={selectedMonth}
-      onSelect={(date) => date && onMonthChange(date)}
-      className="rounded-md border"
-      modifiers={{
-        trading: (date) =>
-          Boolean(tradesByDate?.[date.toDateString()]?.trades.length),
-      }}
-      modifiersStyles={{
-        trading: {
-          fontWeight: "bold",
-        },
-      }}
-      components={{
-        DayContent,
-      }}
-    />
+    <div className="space-y-6">
+      <Calendar
+        mode="single"
+        selected={selectedMonth}
+        onSelect={(date) => {
+          if (date) {
+            const hasTradesForDay = tradesByDate?.[date.toDateString()]?.trades.length > 0;
+            if (hasTradesForDay) {
+              setSelectedDate(date);
+            } else {
+              onMonthChange(date);
+            }
+          }
+        }}
+        className="rounded-md border"
+        modifiers={{
+          trading: (date) =>
+            Boolean(tradesByDate?.[date.toDateString()]?.trades.length),
+        }}
+        modifiersStyles={{
+          trading: {
+            fontWeight: "bold",
+            cursor: "pointer",
+          },
+        }}
+        components={{
+          DayContent,
+        }}
+      />
+
+      {selectedDate && tradesByDate?.[selectedDate.toDateString()] && (
+        <DayDetails
+          date={selectedDate}
+          trades={tradesByDate[selectedDate.toDateString()].trades}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
+    </div>
   );
 }

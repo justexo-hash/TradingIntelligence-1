@@ -23,7 +23,7 @@ export default function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-black border-r border-[rgb(var(--solana-green))/0.2]">
       <div className="flex h-16 items-center px-6 border-b border-[rgb(var(--solana-green))/0.2]">
-        <img src="/logo.png" alt="Logo" className="h-12 w-12" />
+        <img src="/logo.png" alt="Logo" className="h-30 w-30" />
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
