@@ -49,7 +49,7 @@ export default function Trades() {
                           : "text-red-500"
                       }
                     >
-                      ${(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(2)}
+                      Ꮏ{(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)}
                     </span>
                   </p>
                 </div>
