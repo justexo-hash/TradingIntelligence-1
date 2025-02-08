@@ -3,11 +3,42 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --solana-green: 20 241 149;
+    --solana-purple: 156 58 233;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-black text-foreground;
+  }
+}
+
+@layer components {
+  .bg-gradient {
+    background: linear-gradient(135deg, rgb(var(--solana-green) / 0.1), rgb(var(--solana-purple) / 0.1));
+  }
+
+  .card-gradient {
+    background: linear-gradient(135deg, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.8));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgb(var(--solana-green) / 0.2);
+  }
+
+  .text-gradient {
+    background: linear-gradient(to right, rgb(var(--solana-green)), rgb(var(--solana-purple)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .button-gradient {
+    background: linear-gradient(135deg, rgb(var(--solana-green)), rgb(var(--solana-purple)));
+  }
+
+  .button-gradient:hover {
+    background: linear-gradient(135deg, rgb(var(--solana-purple)), rgb(var(--solana-green)));
   }
 }

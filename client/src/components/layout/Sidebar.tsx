@@ -21,10 +21,10 @@ export default function Sidebar() {
   const { logoutMutation } = useAuth();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-sidebar border-r border-border">
-      <div className="flex h-16 items-center px-6">
-        <h1 className="text-xl font-bold text-sidebar-foreground">
-          My Trading Pal
+    <div className="flex h-full w-64 flex-col bg-black border-r border-[rgb(var(--solana-green))/0.2]">
+      <div className="flex h-16 items-center px-6 border-b border-[rgb(var(--solana-green))/0.2]">
+        <h1 className="text-xl font-bold text-gradient">
+          Solana Trading Pal
         </h1>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -36,17 +36,17 @@ export default function Sidebar() {
               href={item.href}
               className={cn(
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-                "group flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                  ? "bg-[rgb(var(--solana-green))/0.1] text-[rgb(var(--solana-green))]"
+                  : "text-foreground hover:bg-[rgb(var(--solana-green))/0.05]",
+                "group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors",
               )}
             >
               <item.icon
                 className={cn(
                   isActive
-                    ? "text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground",
-                  "mr-3 h-5 w-5 flex-shrink-0",
+                    ? "text-[rgb(var(--solana-green))]"
+                    : "text-foreground",
+                  "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
                 )}
               />
               {item.name}
@@ -54,10 +54,10 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-border p-4">
+      <div className="border-t border-[rgb(var(--solana-green))/0.2] p-4">
         <button
           onClick={() => logoutMutation.mutate()}
-          className="flex w-full items-center px-4 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md"
+          className="flex w-full items-center px-4 py-2 text-sm font-medium text-foreground hover:bg-[rgb(var(--solana-green))/0.05] rounded-md transition-colors"
         >
           <LogOut className="mr-3 h-5 w-5" />
           Sign Out

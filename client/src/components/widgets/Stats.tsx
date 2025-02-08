@@ -25,64 +25,64 @@ export default function Stats({ trades }: StatsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card className="p-6">
+      <Card className="p-6 card-gradient">
         <div className="flex items-center">
-          <div className="p-2 bg-primary/10 rounded">
-            <DollarSign className="h-5 w-5 text-primary" />
+          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
+            <DollarSign className="h-5 w-5 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
             <p className="text-sm font-medium text-muted-foreground">
               Account Balance
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold text-gradient">
               {stats.balance.toFixed(4)} SOL
             </h3>
           </div>
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-6 card-gradient">
         <div className="flex items-center">
-          <div className="p-2 bg-primary/10 rounded">
-            <TrendingUp className="h-5 w-5 text-primary" />
+          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
+            <TrendingUp className="h-5 w-5 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
             <p className="text-sm font-medium text-muted-foreground">
               Net P&L
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold text-gradient">
               {stats.balance.toFixed(4)} SOL
             </h3>
           </div>
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-6 card-gradient">
         <div className="flex items-center">
-          <div className="p-2 bg-primary/10 rounded">
-            <Target className="h-5 w-5 text-primary" />
+          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
+            <Target className="h-5 w-5 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
             <p className="text-sm font-medium text-muted-foreground">
               Win Rate
             </p>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold text-gradient">
               {winRate}% ({stats.winningTrades}/{stats.totalTrades})
             </h3>
           </div>
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-6 card-gradient">
         <div className="flex items-center">
-          <div className="p-2 bg-primary/10 rounded">
-            <Star className="h-5 w-5 text-primary" />
+          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
+            <Star className="h-5 w-5 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
             <p className="text-sm font-medium text-muted-foreground">
               Login Streak
             </p>
-            <h3 className="text-2xl font-bold">5 days</h3>
+            <h3 className="text-2xl font-bold text-gradient">5 days</h3>
           </div>
         </div>
       </Card>
