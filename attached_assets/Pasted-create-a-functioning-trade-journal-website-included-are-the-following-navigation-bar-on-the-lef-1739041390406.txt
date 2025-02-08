@@ -1,0 +1,14 @@
+create a functioning trade journal website. included are the following:
+
+navigation bar on the left, featuring: dashboard, daily journal, trades, insights,
+
+the dashboard page will feature widgets at the top for Account Balance, Net Profit and Loss, Win % with the number of trades, and Streak for the current daily login streak. in the center of the page will be a calendar with each day of the week highlighting information such as PnL, number of trades, and win % - each day of the week will be highlighted in green for profitble or red for unprofitable (depending on the PnL). there is also a filter option to allow the user to filter for certain date ranges, or filter for PnL or win % to output days of the month which fell within the filter parameters.
+also, below the calendar there is a chart to show the overall profit and loss trend. 
+
+when a user clicks on a specific day of the month on the calendar, it will show a more detailed view of the statitstics, along with an option to write notes for that day. there is also a button that a user can press called “insights” which will give the user a breakdown on the trade patterns for that day.
+
+the daily journal page will be a log of all the notes that have been written by the user. the user can press a button for “new entry” and create a brand new journal entry. there is also options to organize each entry into folders for organization
+
+the trades page will be a page dedicated to inputting the data values of each user’s trades, with each trade shown in a horizontal list format to document all the trades as well as overall summary for each trade to include buy and sell amount, profit and loss. there is a button at the top right called “new trade” and when a user selects it, it asks for the contract address or a user can ‘cancel’. when a user inputs the contract address, it will bring up live chart integration, buy amount, sell amount. the buy and sell functions will also have a ‘+’ button so that a user can input multiple buy or sell amounts. the page will also have multichecklist dropdown menus on the left side where a user can input: Setup (with the dropdown values of Volume, Socials, Shilled in groups, Art), Emotion (Anxious, Excited, Fearful, Bullish, Bearish, Relaxed, Indifferent), Mistakes (no mistakes, bought too much, bought too little, sold too early, sold to late, setup oversight, distracted, too little volume, other)
+
+the insights page will be a collection of reports that are generated to analyze the trading patterns for each trade that was inputted in the trades page. there is log of all previous reports, and a button at the top right called “new insight” which will take all the information collected up to the point to give the user a breakdown on the profitable or unprofitable trades and the patterns for each.
