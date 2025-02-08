@@ -9,13 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +21,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { queryClient } from "@/lib/queryClient";
+
+const folders = [
+  { value: "daily", label: "Daily Reviews" },
+  { value: "weekly", label: "Weekly Reviews" },
+  { value: "monthly", label: "Monthly Reviews" },
+  { value: "lessons", label: "Lessons Learned" },
+  { value: "strategies", label: "Trading Strategies" },
+];
 
 export default function JournalForm() {
   const form = useForm({
@@ -82,21 +84,18 @@ export default function JournalForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Folder</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a folder" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="daily">Daily Reviews</SelectItem>
-                    <SelectItem value="weekly">Weekly Reviews</SelectItem>
-                    <SelectItem value="monthly">Monthly Reviews</SelectItem>
-                    <SelectItem value="lessons">Lessons Learned</SelectItem>
-                    <SelectItem value="strategies">Trading Strategies</SelectItem>
+                    {folders.map((folder) => (
+                      <SelectItem key={folder.value} value={folder.value}>
+                        {folder.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </FormItem>
