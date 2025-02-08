@@ -3,9 +3,10 @@ import { DollarSign, TrendingUp, Target, Star } from "lucide-react";
 
 interface StatsProps {
   trades: any[];
+  loginStreak: number;
 }
 
-export default function Stats({ trades }: StatsProps) {
+export default function Stats({ trades, loginStreak }: StatsProps) {
   const stats = trades?.reduce(
     (acc, trade) => {
       const pnl = Number(trade.sellAmount) - Number(trade.buyAmount);
@@ -82,7 +83,9 @@ export default function Stats({ trades }: StatsProps) {
             <p className="text-sm font-medium text-muted-foreground">
               Login Streak
             </p>
-            <h3 className="text-2xl font-bold text-gradient">5 days</h3>
+            <h3 className="text-2xl font-bold text-gradient">
+              {loginStreak} {loginStreak === 1 ? 'day' : 'days'}
+            </h3>
           </div>
         </div>
       </Card>

@@ -11,10 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Trade } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [filter, setFilter] = useState<"pnl" | "winrate">("pnl");
+  const { user } = useAuth();
 
   const { data: trades } = useQuery<Trade[]>({
     queryKey: ["/api/trades/1"], // TODO: Replace with actual user ID
@@ -37,7 +39,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <Stats trades={trades || []} />
+      <Stats trades={trades || []} loginStreak={user?.loginStreak || 0} />
 
       <Card className="p-6">
         <TradeCalendar
