@@ -16,12 +16,6 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [tab, setTab] = useState<"login" | "register">("login");
 
-  // If user is already logged in, redirect to dashboard
-  if (user) {
-    setLocation("/");
-    return null;
-  }
-
   const loginForm = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
@@ -37,6 +31,12 @@ export default function AuthPage() {
       password: "",
     },
   });
+
+  // Only redirect after all hooks are called
+  if (user) {
+    setTimeout(() => setLocation("/"), 0);
+    return null;
+  }
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">
