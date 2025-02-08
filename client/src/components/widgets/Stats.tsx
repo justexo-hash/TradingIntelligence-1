@@ -1,0 +1,91 @@
+import { Card } from "@/components/ui/card";
+import { DollarSign, TrendingUp, Target, Star } from "lucide-react";
+
+interface StatsProps {
+  trades: any[];
+}
+
+export default function Stats({ trades }: StatsProps) {
+  const stats = trades?.reduce(
+    (acc, trade) => {
+      const pnl = Number(trade.sellAmount) - Number(trade.buyAmount);
+      return {
+        balance: acc.balance + pnl,
+        totalTrades: acc.totalTrades + 1,
+        winningTrades:
+          acc.winningTrades + (pnl > 0 ? 1 : 0),
+      };
+    },
+    { balance: 0, totalTrades: 0, winningTrades: 0 }
+  ) ?? { balance: 0, totalTrades: 0, winningTrades: 0 };
+
+  const winRate = stats.totalTrades
+    ? ((stats.winningTrades / stats.totalTrades) * 100).toFixed(1)
+    : "0.0";
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Card className="p-6">
+        <div className="flex items-center">
+          <div className="p-2 bg-primary/10 rounded">
+            <DollarSign className="h-5 w-5 text-primary" />
+          </div>
+          <div className="ml-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              Account Balance
+            </p>
+            <h3 className="text-2xl font-bold">
+              ${stats.balance.toFixed(2)}
+            </h3>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center">
+          <div className="p-2 bg-primary/10 rounded">
+            <TrendingUp className="h-5 w-5 text-primary" />
+          </div>
+          <div className="ml-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              Net P&L
+            </p>
+            <h3 className="text-2xl font-bold">
+              ${stats.balance.toFixed(2)}
+            </h3>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center">
+          <div className="p-2 bg-primary/10 rounded">
+            <Target className="h-5 w-5 text-primary" />
+          </div>
+          <div className="ml-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              Win Rate
+            </p>
+            <h3 className="text-2xl font-bold">
+              {winRate}% ({stats.winningTrades}/{stats.totalTrades})
+            </h3>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center">
+          <div className="p-2 bg-primary/10 rounded">
+            <Star className="h-5 w-5 text-primary" />
+          </div>
+          <div className="ml-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              Login Streak
+            </p>
+            <h3 className="text-2xl font-bold">5 days</h3>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
