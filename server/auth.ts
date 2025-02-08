@@ -74,6 +74,7 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
+        loginStreak: 1, // Set initial login streak to 1
       });
 
       req.login(user, (err) => {
