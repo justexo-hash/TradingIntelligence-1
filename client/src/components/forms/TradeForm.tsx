@@ -3,14 +3,15 @@ import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
-import { insertTradeSchema } from "@shared/schema";
-import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { insertTradeSchema, type InsertTrade } from "@shared/schema";
+import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Loader2 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art"];
 const emotionOptions = [
@@ -35,16 +36,17 @@ const mistakeOptions = [
 ];
 
 export default function TradeForm() {
+  const { toast } = useToast();
   const [buys, setBuys] = useState([{ amount: "" }]);
   const [sells, setSells] = useState([{ amount: "" }]);
 
-  const form = useForm({
+  const form = useForm<InsertTrade>({
     resolver: zodResolver(insertTradeSchema),
     defaultValues: {
       userId: 1, // TODO: Replace with actual user ID
       contractAddress: "",
-      buyAmount: 0,
-      sellAmount: 0,
+      buyAmount: "0",
+      sellAmount: "0",
       setup: [],
       emotion: [],
       mistakes: [],
@@ -53,23 +55,38 @@ export default function TradeForm() {
   });
 
   const tradeMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: InsertTrade) => {
       return apiRequest("POST", "/api/trades", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades/1"] });
+      toast({
+        title: "Success",
+        description: "Trade saved successfully.",
+      });
+      form.reset();
+      // Find and click the DialogClose button
+      const closeButton = document.querySelector('[data-button="close"]');
+      if (closeButton instanceof HTMLElement) {
+        closeButton.click();
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save trade. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
-  const onSubmit = (data: any) => {
-    const totalBuyAmount = buys.reduce(
-      (sum, buy) => sum + (Number(buy.amount) || 0),
-      0
-    );
-    const totalSellAmount = sells.reduce(
-      (sum, sell) => sum + (Number(sell.amount) || 0),
-      0
-    );
+  const onSubmit = (data: InsertTrade) => {
+    const totalBuyAmount = buys
+      .reduce((sum, buy) => sum + (Number(buy.amount) || 0), 0)
+      .toString();
+    const totalSellAmount = sells
+      .reduce((sum, sell) => sum + (Number(sell.amount) || 0), 0)
+      .toString();
 
     tradeMutation.mutate({
       ...data,
@@ -249,9 +266,19 @@ export default function TradeForm() {
             )}
           />
 
-          <Button type="submit" className="w-full">
-            Save Trade
-          </Button>
+          <div className="flex justify-end gap-4">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" data-button="close">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={tradeMutation.isPending}>
+              {tradeMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Save Trade
+            </Button>
+          </div>
         </form>
       </Form>
     </DialogContent>
