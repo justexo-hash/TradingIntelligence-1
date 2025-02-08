@@ -62,7 +62,7 @@ export default function TradeCalendar({
         <div className="font-normal">{date.getDate()}</div>
         <div className="text-xs mt-1">
           {filter === "pnl"
-            ? `Ꮏ${dayTrades.pnl.toFixed(4)}`
+            ? `${dayTrades.pnl.toFixed(4)} SOL`
             : `${winRate.toFixed(0)}%`}
         </div>
         <div className="text-xs">{dayTrades.trades.length} trades</div>

@@ -35,7 +35,7 @@ export default function Stats({ trades }: StatsProps) {
               Account Balance
             </p>
             <h3 className="text-2xl font-bold">
-              Ꮏ{stats.balance.toFixed(4)}
+              {stats.balance.toFixed(4)} SOL
             </h3>
           </div>
         </div>
@@ -51,7 +51,7 @@ export default function Stats({ trades }: StatsProps) {
               Net P&L
             </p>
             <h3 className="text-2xl font-bold">
-              Ꮏ{stats.balance.toFixed(4)}
+              {stats.balance.toFixed(4)} SOL
             </h3>
           </div>
         </div>

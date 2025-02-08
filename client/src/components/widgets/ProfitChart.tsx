@@ -45,7 +45,7 @@ export default function ProfitChart({ trades }: ProfitChartProps) {
                 return (
                   <Card className="p-2">
                     <p className="text-sm">
-                      Balance: Ꮏ{payload[0].value.toFixed(4)}
+                      Balance: {payload[0].value.toFixed(4)} SOL
                     </p>
                   </Card>
                 );

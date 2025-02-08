@@ -49,7 +49,7 @@ export default function Trades() {
                           : "text-red-500"
                       }
                     >
-                      Ꮏ{(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)}
+                      {(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)} SOL
                     </span>
                   </p>
                 </div>
