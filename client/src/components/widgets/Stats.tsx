@@ -1,17 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Target, Star } from "lucide-react";
 import LoginStreakAnimation from "./LoginStreakAnimation";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 interface StatsProps {
   trades: any[];
   loginStreak: number;
 }
 
-export default function Stats({ trades, loginStreak: initialStreak }: StatsProps) {
-  const [testStreak, setTestStreak] = useState(initialStreak);
-
+export default function Stats({ trades, loginStreak }: StatsProps) {
   const stats = trades?.reduce(
     (acc, trade) => {
       const pnl = Number(trade.sellAmount) - Number(trade.buyAmount);
@@ -89,19 +85,9 @@ export default function Stats({ trades, loginStreak: initialStreak }: StatsProps
               Login Streak
             </p>
             <LoginStreakAnimation
-              streak={testStreak}
+              streak={loginStreak}
               className="relative h-8"
             />
-            {import.meta.env.DEV && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="mt-2"
-                onClick={() => setTestStreak(s => s + 1)}
-              >
-                Test Animation
-              </Button>
-            )}
           </div>
         </div>
       </Card>
