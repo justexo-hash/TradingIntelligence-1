@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Target, Star } from "lucide-react";
+import LoginStreakAnimation from "./LoginStreakAnimation";
 
 interface StatsProps {
   trades: any[];
@@ -79,13 +80,14 @@ export default function Stats({ trades, loginStreak }: StatsProps) {
           <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
             <Star className="h-5 w-5 text-[rgb(var(--solana-green))]" />
           </div>
-          <div className="ml-4">
+          <div className="ml-4 relative">
             <p className="text-sm font-medium text-muted-foreground">
               Login Streak
             </p>
-            <h3 className="text-2xl font-bold text-gradient">
-              {loginStreak} {loginStreak === 1 ? 'day' : 'days'}
-            </h3>
+            <LoginStreakAnimation
+              streak={loginStreak}
+              className="relative h-8"
+            />
           </div>
         </div>
       </Card>
