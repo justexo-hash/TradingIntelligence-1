@@ -113,7 +113,7 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending && (
@@ -165,7 +165,7 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending && (

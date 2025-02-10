@@ -491,6 +491,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
             <Button
               type="submit"
               disabled={createTradeMutation.isPending || updateTradeMutation.isPending}
+              className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
             >
               {(createTradeMutation.isPending || updateTradeMutation.isPending) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

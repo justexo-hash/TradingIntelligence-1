@@ -150,7 +150,11 @@ export default function JournalForm() {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={journalMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={journalMutation.isPending}
+              className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
+            >
               {journalMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
