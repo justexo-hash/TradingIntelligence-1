@@ -26,29 +26,76 @@ export function registerRoutes(app: Express) {
   // Token information endpoint with better error handling
   app.get("/api/token/:contractAddress", async (req, res) => {
     try {
-      const response = await fetch(`https://frontend-api.pump.fun/api/token/${req.params.contractAddress}`);
+      const { contractAddress } = req.params;
+
+      // Log the request attempt
+      console.log(`Attempting to fetch token info for address: ${contractAddress}`);
+
+      const response = await fetch(`https://frontend-api.pump.fun/coins/${contractAddress}?sync=true`, {
+        headers: {
+          'Accept': '*/*'
+        }
+      });
+
+      // Log the raw response
+      const responseText = await response.text();
+      console.log("Raw API Response:", responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        return res.status(500).json({
+          error: "Invalid response from token API",
+          details: "Response was not valid JSON",
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Check for rate limit errors
+      const rateLimit = {
+        limit: response.headers.get('x-ratelimit-limit'),
+        remaining: response.headers.get('x-ratelimit-remaining'),
+        reset: response.headers.get('x-ratelimit-reset')
+      };
 
       if (!response.ok) {
-        // Log the full error response for debugging
-        const errorText = await response.text();
         console.error("Token lookup failed:", {
           status: response.status,
           statusText: response.statusText,
-          body: errorText,
-          contractAddress: req.params.contractAddress
+          data,
+          rateLimit,
+          contractAddress
         });
 
-        throw new Error(`Failed to fetch token info: ${response.statusText}`);
+        // If we hit rate limit, send a specific error
+        if (response.status === 429) {
+          return res.status(429).json({
+            error: "Rate limit exceeded",
+            details: `Please try again in ${rateLimit.reset} seconds`,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        return res.status(response.status).json({
+          error: "Failed to fetch token info",
+          details: data.message || response.statusText,
+          timestamp: new Date().toISOString()
+        });
       }
 
-      const data = await response.json();
+      // For successful responses, return relevant token data
+      const tokenData = {
+        name: data.name,
+        symbol: data.symbol,
+        description: data.description,
+        image: data.image_uri,
+        marketCap: data.market_cap,
+        totalSupply: data.total_supply,
+      };
 
-      // Validate the response has the expected fields
-      if (!data || (typeof data !== 'object')) {
-        throw new Error("Invalid token data received");
-      }
-
-      res.json(data);
+      res.json(tokenData);
     } catch (error) {
       console.error("Error fetching token info:", error);
       res.status(500).json({ 

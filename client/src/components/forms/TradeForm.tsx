@@ -78,8 +78,9 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
 
   const { data: tokenInfo, isLoading: isLoadingToken, error: tokenError } = useQuery({
     queryKey: [`/api/token/${contractAddress}`],
-    enabled: !!contractAddress,
+    enabled: !!contractAddress && contractAddress.length > 0,
     retry: 1, // Only retry once to avoid too many failed requests
+    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
   });
 
   const form = useForm<InsertTrade>({
@@ -195,13 +196,39 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                 <FormLabel>Contract Address</FormLabel>
                 <FormControl>
                   <div className="space-y-2">
-                    <Input 
-                      {...field} 
+                    <Input
+                      {...field}
                       onChange={(e) => {
                         field.onChange(e.target.value);
-                        debouncedLookup(e.target.value);
+                        if (e.target.value.length > 0) {
+                          debouncedLookup(e.target.value);
+                        }
                       }}
+                      placeholder="Enter contract address"
                     />
+                    <FormDescription className="space-y-2 text-sm">
+                      {tokenInfo && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div>
+                              {tokenInfo.name && (
+                                <p className="font-medium">
+                                  {tokenInfo.name} {tokenInfo.symbol && `(${tokenInfo.symbol})`}
+                                </p>
+                              )}
+                              {tokenInfo.description && (
+                                <p className="text-muted-foreground text-xs">{tokenInfo.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          {tokenInfo.marketCap && (
+                            <p className="text-xs">
+                              Market Cap: {Number(tokenInfo.marketCap).toFixed(2)} SOL
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </FormDescription>
                     {isLoadingToken && (
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -211,17 +238,13 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                     {tokenError && (
                       <div className="flex items-center text-sm text-destructive">
                         <AlertCircle className="mr-2 h-4 w-4" />
-                        Could not fetch token information. Please verify the contract address.
-                      </div>
-                    )}
-                    {tokenInfo && (
-                      <FormDescription className="text-sm">
-                        {tokenInfo.name ? (
-                          <>Token: {tokenInfo.name} ({tokenInfo.symbol})</>
-                        ) : (
-                          "Token information not available"
+                        {tokenError instanceof Error
+                          ? tokenError.message
+                          : "Could not fetch token information. Please verify the contract address."}
+                        {tokenError instanceof Error && tokenError.message.includes("Rate limit") && (
+                          <p className="text-xs mt-1">Please wait a moment before trying again.</p>
                         )}
-                      </FormDescription>
+                      </div>
                     )}
                   </div>
                 </FormControl>

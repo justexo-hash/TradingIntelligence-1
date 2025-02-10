@@ -73,20 +73,20 @@ export default function Dashboard() {
             trades={trades || []} 
             accountBalance={user?.accountBalance || "0"}
           />
-        </div>
 
-        {selectedDate && selectedDayTrades.length > 0 && (
-          <div className="col-span-full">
-            <DayDetails
-              date={selectedDate}
-              trades={selectedDayTrades}
-              onClose={() => {
-                setSelectedDate(null);
-                setSelectedDayTrades([]);
-              }}
-            />
-          </div>
-        )}
+          {selectedDate && selectedDayTrades.length > 0 && (
+            <div className="lg:col-span-2">
+              <DayDetails
+                date={selectedDate}
+                trades={selectedDayTrades}
+                onClose={() => {
+                  setSelectedDate(null);
+                  setSelectedDayTrades([]);
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
