@@ -3,21 +3,22 @@ import { DollarSign, TrendingUp, Target } from "lucide-react";
 
 interface StatsProps {
   trades: any[];
+  accountBalance?: string;
 }
 
-export default function Stats({ trades }: StatsProps) {
+export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
   const stats = trades?.reduce(
     (acc, trade) => {
       const pnl = Number(trade.sellAmount) - Number(trade.buyAmount);
       return {
-        balance: acc.balance + pnl,
+        totalPnl: acc.totalPnl + pnl,
         totalTrades: acc.totalTrades + 1,
         winningTrades:
           acc.winningTrades + (pnl > 0 ? 1 : 0),
       };
     },
-    { balance: 0, totalTrades: 0, winningTrades: 0 }
-  ) ?? { balance: 0, totalTrades: 0, winningTrades: 0 };
+    { totalPnl: 0, totalTrades: 0, winningTrades: 0 }
+  ) ?? { totalPnl: 0, totalTrades: 0, winningTrades: 0 };
 
   const winRate = stats.totalTrades
     ? ((stats.winningTrades / stats.totalTrades) * 100).toFixed(1)
@@ -36,7 +37,7 @@ export default function Stats({ trades }: StatsProps) {
               Account Balance
             </p>
             <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
-              {stats.balance.toFixed(4)} SOL
+              {Number(accountBalance).toFixed(4)} SOL
             </h3>
           </div>
         </div>
@@ -53,7 +54,7 @@ export default function Stats({ trades }: StatsProps) {
               Net P&L
             </p>
             <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
-              {stats.balance.toFixed(4)} SOL
+              {stats.totalPnl.toFixed(4)} SOL
             </h3>
           </div>
         </div>
