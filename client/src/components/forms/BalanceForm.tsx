@@ -26,7 +26,11 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
 
   const updateBalanceMutation = useMutation({
     mutationFn: async (newBalance: string) => {
-      return apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
+      const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
+      if (!response.ok) {
+        throw new Error("Failed to update balance");
+      }
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -36,10 +40,10 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
       });
       if (onClose) onClose();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to update balance. Please try again.",
+        description: error.message || "Failed to update balance. Please try again.",
         variant: "destructive",
       });
     },
@@ -47,6 +51,14 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!balance || isNaN(Number(balance))) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid balance",
+        variant: "destructive",
+      });
+      return;
+    }
     updateBalanceMutation.mutate(balance);
   };
 
