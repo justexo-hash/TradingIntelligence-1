@@ -1,15 +1,16 @@
 import { Card } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Target } from "lucide-react";
+import type { Trade } from "@shared/schema";
 
 interface StatsProps {
-  trades: any[];
+  trades: Trade[];
   accountBalance?: string;
 }
 
 export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
   const stats = trades?.reduce(
     (acc, trade) => {
-      const pnl = Number(trade.sellAmount) - Number(trade.buyAmount);
+      const pnl = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
       return {
         totalPnl: acc.totalPnl + pnl,
         totalTrades: acc.totalTrades + 1,
