@@ -72,7 +72,7 @@ export default function TradeForm() {
       return apiRequest("POST", "/api/trades", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trades", user?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
       toast({
         title: "Success",
         description: "Trade saved successfully.",

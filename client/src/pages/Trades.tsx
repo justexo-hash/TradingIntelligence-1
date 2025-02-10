@@ -11,7 +11,7 @@ import type { Trade } from "@shared/schema";
 export default function Trades() {
   const { user } = useAuth();
   const { data: trades } = useQuery<Trade[]>({
-    queryKey: ["/api/trades", user?.id],
+    queryKey: [`/api/trades/${user?.id}`],
     enabled: !!user,
   });
 
@@ -63,7 +63,7 @@ export default function Trades() {
                 <div>
                   <h4 className="font-medium mb-2">Setup</h4>
                   <div className="flex flex-wrap gap-2">
-                    {trade.setup.map((s: string) => (
+                    {trade.setup?.map((s) => (
                       <span
                         key={s}
                         className="px-2 py-1 bg-primary/10 rounded text-sm"
@@ -76,7 +76,7 @@ export default function Trades() {
                 <div>
                   <h4 className="font-medium mb-2">Emotion</h4>
                   <div className="flex flex-wrap gap-2">
-                    {trade.emotion.map((e: string) => (
+                    {trade.emotion?.map((e) => (
                       <span
                         key={e}
                         className="px-2 py-1 bg-primary/10 rounded text-sm"
@@ -89,7 +89,7 @@ export default function Trades() {
                 <div>
                   <h4 className="font-medium mb-2">Mistakes</h4>
                   <div className="flex flex-wrap gap-2">
-                    {trade.mistakes.map((m: string) => (
+                    {trade.mistakes?.map((m) => (
                       <span
                         key={m}
                         className="px-2 py-1 bg-destructive/10 rounded text-sm"
