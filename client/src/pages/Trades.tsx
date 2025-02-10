@@ -1,21 +1,55 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import TradeForm from "@/components/forms/TradeForm";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Pencil } from "lucide-react";
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Trade } from "@shared/schema";
 
 export default function Trades() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
 
   const { data: trades } = useQuery<Trade[]>({
     queryKey: [`/api/trades/${user?.id}`],
     enabled: !!user,
+  });
+
+  const deleteTradeMutation = useMutation({
+    mutationFn: async (tradeId: number) => {
+      return apiRequest("DELETE", `/api/trades/${tradeId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      toast({
+        title: "Success",
+        description: "Trade deleted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete trade. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   return (
@@ -53,7 +87,7 @@ export default function Trades() {
                       <span
                         className={
                           Number(trade.sellAmount) - Number(trade.buyAmount) > 0
-                            ? "text-green-500"
+                            ? "text-[rgb(var(--solana-green))]"
                             : "text-red-500"
                         }
                       >
@@ -61,18 +95,44 @@ export default function Trades() {
                       </span>
                     </p>
                   </div>
-                  <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditingTrade(trade)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    {editingTrade?.id === trade.id && <TradeForm editingTrade={trade} />}
-                  </Dialog>
+                  <div className="flex gap-2">
+                    <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingTrade(trade)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      {editingTrade?.id === trade.id && <TradeForm editingTrade={trade} />}
+                    </Dialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Trade</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this trade? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteTradeMutation.mutate(trade.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </div>
 

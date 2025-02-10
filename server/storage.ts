@@ -15,6 +15,7 @@ export interface IStorage {
   createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade>;
   getTrade(id: number): Promise<Trade | undefined>;
   updateTrade(id: number, trade: Omit<Trade, "id" | "date">): Promise<Trade>;
+  deleteTrade(id: number): Promise<void>;
   getTradesByUser(userId: number): Promise<Trade[]>;
   getTradesByDate(userId: number, date: Date): Promise<Trade[]>;
 
@@ -66,6 +67,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(trades.id, id))
       .returning();
     return updatedTrade;
+  }
+
+  async deleteTrade(id: number): Promise<void> {
+    await db.delete(trades).where(eq(trades.id, id));
   }
 
   async getTradesByUser(userId: number): Promise<Trade[]> {

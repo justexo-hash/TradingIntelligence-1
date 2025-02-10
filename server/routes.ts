@@ -73,6 +73,24 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Add the new DELETE endpoint for trades
+  app.delete("/api/trades/:id", requireAuth, async (req, res) => {
+    try {
+      const tradeId = Number(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+
+      // Check if trade exists and belongs to the authenticated user
+      if (!trade || trade.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      await storage.deleteTrade(tradeId);
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete trade" });
+    }
+  });
+
 
   // Journals
   app.post("/api/journals", requireAuth, async (req, res) => {
