@@ -24,7 +24,7 @@ export default function Stats({ trades }: StatsProps) {
     : "0.0";
 
   return (
-    <div className="grid grid-cols-1 gap-3">
+    <div className="flex flex-col gap-3 md:grid md:grid-cols-3">
       <Card className="p-3 card-gradient">
         <div className="flex items-center">
           <div className="p-1.5 bg-[rgb(var(--solana-green))/0.1] rounded">
