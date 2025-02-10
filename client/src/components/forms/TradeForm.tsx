@@ -171,6 +171,9 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
       ...data,
       buyAmount: totalBuyAmount,
       sellAmount: totalSellAmount,
+      tokenName: tokenInfo?.name || null,
+      tokenSymbol: tokenInfo?.symbol || null,
+      tokenImage: tokenInfo?.image || null,
     };
 
     if (editingTrade) {

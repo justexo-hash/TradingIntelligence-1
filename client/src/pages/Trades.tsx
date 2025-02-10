@@ -74,7 +74,13 @@ export default function Trades() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    {trade.contractAddress}
+                    {trade.tokenName ? (
+                      <>
+                        {trade.tokenName} {trade.tokenSymbol && `(${trade.tokenSymbol})`}
+                      </>
+                    ) : (
+                      trade.contractAddress
+                    )}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     {new Date(trade.date).toLocaleDateString()}
