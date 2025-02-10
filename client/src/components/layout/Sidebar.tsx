@@ -7,6 +7,7 @@ import {
   LineChart,
   PieChart,
   LogOut,
+  HelpCircle,
 } from "lucide-react";
 
 const navigation = [
@@ -14,6 +15,7 @@ const navigation = [
   { name: "Daily Journal", href: "/journal", icon: BookText },
   { name: "Trades", href: "/trades", icon: LineChart },
   { name: "Insights", href: "/insights", icon: PieChart },
+  { name: "Quick Guide", href: "/guide", icon: HelpCircle },
 ];
 
 export default function Sidebar() {

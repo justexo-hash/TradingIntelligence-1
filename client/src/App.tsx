@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import Journal from "@/pages/Journal";
 import Trades from "@/pages/Trades";
 import Insights from "@/pages/Insights";
+import QuickGuide from "@/pages/QuickGuide";
 import AuthPage from "@/pages/auth";
 import Sidebar from "@/components/layout/Sidebar";
 import BottomNav from "@/components/layout/BottomNav";
@@ -56,6 +57,14 @@ function Router() {
         component={() => (
           <ProtectedLayout>
             <Insights />
+          </ProtectedLayout>
+        )}
+      />
+      <ProtectedRoute
+        path="/guide"
+        component={() => (
+          <ProtectedLayout>
+            <QuickGuide />
           </ProtectedLayout>
         )}
       />
