@@ -42,8 +42,8 @@ export default function AuthPage() {
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>My Trading Pal</CardTitle>
+          <CardHeader className="flex flex-col items-center">
+            <img src="/logo.png" alt="Logo" className="h-16 w-16 mb-2" />
             <CardDescription>
               Your personal trading journal and performance analyzer
             </CardDescription>
