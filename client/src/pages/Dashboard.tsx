@@ -23,8 +23,8 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="flex flex-col gap-3 p-3 md:gap-6 md:p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col gap-4 p-4 pb-20 md:min-h-screen md:gap-6 md:p-6 md:pb-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h1 className="text-xl font-bold md:text-3xl">Dashboard</h1>
         <Select value={filter} onValueChange={(v: "pnl" | "winrate") => setFilter(v)}>
           <SelectTrigger className="h-9 w-full md:w-[180px]">
@@ -37,11 +37,11 @@ export default function Dashboard() {
         </Select>
       </div>
 
-      <div className="md:grid md:grid-cols-3 md:gap-6">
+      <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         <Stats trades={trades || []} />
       </div>
 
-      <Card className="overflow-hidden p-3 md:p-6">
+      <Card className="flex-1 overflow-hidden p-4 md:p-6">
         <TradeCalendar
           trades={trades || []}
           selectedMonth={selectedMonth}

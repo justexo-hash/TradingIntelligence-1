@@ -21,7 +21,7 @@ export default function Sidebar() {
   const { logoutMutation } = useAuth();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-black border-r border-[rgb(var(--solana-green))/0.2]">
+    <div className="hidden md:flex h-full w-64 flex-col bg-black border-r border-[rgb(var(--solana-green))/0.2]">
       <div className="flex h-16 items-center px-6 border-b border-[rgb(var(--solana-green))/0.2]">
         <img src="/logo.png" alt="Logo" className="h-30 w-30" />
       </div>

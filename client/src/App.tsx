@@ -11,12 +11,14 @@ import Trades from "@/pages/Trades";
 import Insights from "@/pages/Insights";
 import AuthPage from "@/pages/auth";
 import Sidebar from "@/components/layout/Sidebar";
+import BottomNav from "@/components/layout/BottomNav";
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">{children}</main>
+      <BottomNav />
     </div>
   );
 }
