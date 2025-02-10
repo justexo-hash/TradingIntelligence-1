@@ -50,12 +50,13 @@ export default function Insights() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Insights</h1>
         <Button
           onClick={() => generateMutation.mutate()}
           disabled={generateMutation.isPending || !user}
+          className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
         >
           {generateMutation.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -66,10 +67,10 @@ export default function Insights() {
         </Button>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-8rem)]">
-        <div className="space-y-4">
+      <ScrollArea className="h-[calc(100vh-10rem)]">
+        <div className="grid gap-4">
           {insights?.map((insight) => (
-            <Card key={insight.id} className="p-6">
+            <Card key={insight.id} className="p-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-none">
               <div className="flex justify-between items-start">
                 <p className="text-sm text-muted-foreground">
                   {new Date(insight.date).toLocaleDateString()}
