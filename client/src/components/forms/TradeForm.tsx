@@ -482,7 +482,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
             )}
           />
 
-          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-t flex justify-end gap-4 p-4">
+          <div className="sticky bottom-[-24px] bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-t flex justify-end gap-4 p-4 mt-8 -mx-6">
             <DialogClose asChild>
               <Button type="button" variant="outline" data-button="close">
                 Cancel
