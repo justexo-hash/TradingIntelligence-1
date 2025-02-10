@@ -3,13 +3,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import type { Trade } from "@shared/schema";
 import { type DayContentProps } from "react-day-picker";
-import DayDetails from "./DayDetails";
 
 interface TradeCalendarProps {
   trades: Trade[];
   selectedMonth: Date;
   onMonthChange: (date: Date) => void;
   filter: "pnl" | "winrate";
+  onDaySelect: (date: Date, trades: Trade[]) => void;
 }
 
 interface TradeDay {
@@ -23,6 +23,7 @@ export default function TradeCalendar({
   selectedMonth,
   onMonthChange,
   filter,
+  onDaySelect,
 }: TradeCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -78,6 +79,7 @@ export default function TradeCalendar({
             const hasTradesForDay = tradesByDate?.[date.toDateString()]?.trades.length > 0;
             if (hasTradesForDay) {
               setSelectedDate(date);
+              onDaySelect(date, tradesByDate[date.toDateString()].trades);
             } else {
               onMonthChange(date);
             }
@@ -98,14 +100,6 @@ export default function TradeCalendar({
           DayContent,
         }}
       />
-
-      {selectedDate && tradesByDate?.[selectedDate.toDateString()] && (
-        <DayDetails
-          date={selectedDate}
-          trades={tradesByDate[selectedDate.toDateString()].trades}
-          onClose={() => setSelectedDate(null)}
-        />
-      )}
     </div>
   );
 }

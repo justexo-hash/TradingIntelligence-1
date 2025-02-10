@@ -13,10 +13,13 @@ import {
 } from "@/components/ui/select";
 import type { Trade } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
+import DayDetails from "@/components/widgets/DayDetails";
 
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [filter, setFilter] = useState<"pnl" | "winrate">("pnl");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDayTrades, setSelectedDayTrades] = useState<Trade[]>([]);
   const { user } = useAuth();
 
   const { data: trades } = useQuery<Trade[]>({
@@ -59,6 +62,10 @@ export default function Dashboard() {
               selectedMonth={selectedMonth}
               onMonthChange={setSelectedMonth}
               filter={filter}
+              onDaySelect={(date, trades) => {
+                setSelectedDate(date);
+                setSelectedDayTrades(trades);
+              }}
             />
           </Card>
 
@@ -67,6 +74,19 @@ export default function Dashboard() {
             accountBalance={user?.accountBalance || "0"}
           />
         </div>
+
+        {selectedDate && selectedDayTrades.length > 0 && (
+          <div className="col-span-full">
+            <DayDetails
+              date={selectedDate}
+              trades={selectedDayTrades}
+              onClose={() => {
+                setSelectedDate(null);
+                setSelectedDayTrades([]);
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
