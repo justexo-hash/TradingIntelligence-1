@@ -23,7 +23,7 @@ export default function Sidebar() {
   return (
     <div className="hidden md:flex h-full w-72 flex-col bg-gradient-to-b from-black/95 via-black/90 to-black/95 backdrop-blur-xl border-r border-[rgb(var(--solana-green))]/5">
       <div className="flex h-16 items-center px-8 border-b border-[rgb(var(--solana-green))]/5">
-        <img src="/logo.png" alt="Logo" className="h-8" />
+        <img src="/logo.png" alt="Logo" className="h-30" />
       </div>
 
       <nav className="flex-1 space-y-2 px-4 py-8">
@@ -38,31 +38,35 @@ export default function Sidebar() {
                 "hover:bg-gradient-to-r hover:from-[rgb(var(--solana-green))]/10 hover:to-transparent",
                 isActive
                   ? "bg-gradient-to-r from-[rgb(var(--solana-green))]/20 to-transparent text-[rgb(var(--solana-green))]"
-                  : "text-foreground/60 hover:text-foreground"
+                  : "text-foreground/60 hover:text-foreground",
               )}
             >
-              <div className={cn(
-                "absolute inset-y-0 left-0 w-1 rounded-full transition-all duration-300",
-                isActive 
-                  ? "bg-[rgb(var(--solana-green))]" 
-                  : "bg-transparent group-hover:bg-[rgb(var(--solana-green))]/30"
-              )} />
+              <div
+                className={cn(
+                  "absolute inset-y-0 left-0 w-1 rounded-full transition-all duration-300",
+                  isActive
+                    ? "bg-[rgb(var(--solana-green))]"
+                    : "bg-transparent group-hover:bg-[rgb(var(--solana-green))]/30",
+                )}
+              />
 
               <item.icon
                 className={cn(
                   "mr-4 h-5 w-5 transition-all duration-300",
                   isActive
                     ? "text-[rgb(var(--solana-green))]"
-                    : "text-foreground/40 group-hover:text-foreground/60"
+                    : "text-foreground/40 group-hover:text-foreground/60",
                 )}
               />
 
               <span className="relative">
                 {item.name}
-                <span className={cn(
-                  "absolute -bottom-1 left-0 h-[2px] w-0 bg-[rgb(var(--solana-green))] transition-all duration-300",
-                  isActive || "group-hover:w-full"
-                )} />
+                <span
+                  className={cn(
+                    "absolute -bottom-1 left-0 h-[2px] w-0 bg-[rgb(var(--solana-green))] transition-all duration-300",
+                    isActive || "group-hover:w-full",
+                  )}
+                />
               </span>
             </Link>
           );
