@@ -14,10 +14,21 @@ export function registerRoutes(app: Express) {
   // Set up authentication routes and middleware
   setupAuth(app);
 
+  // Authentication middleware for API routes
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    next();
+  };
+
   // Trades
-  app.post("/api/trades", async (req, res) => {
+  app.post("/api/trades", requireAuth, async (req, res) => {
     try {
-      const trade = insertTradeSchema.parse(req.body);
+      const trade = insertTradeSchema.parse({
+        ...req.body,
+        userId: req.user!.id, // Always use the authenticated user's ID
+      });
       const result = await storage.createTrade(trade);
       res.json(result);
     } catch (error) {
@@ -25,9 +36,14 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/trades/:userId", async (req, res) => {
+  app.get("/api/trades/:userId", requireAuth, async (req, res) => {
     try {
-      const trades = await storage.getTradesByUser(Number(req.params.userId));
+      const userId = Number(req.params.userId);
+      // Only allow users to access their own trades
+      if (userId !== req.user!.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const trades = await storage.getTradesByUser(userId);
       res.json(trades);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch trades" });
@@ -35,9 +51,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Journals
-  app.post("/api/journals", async (req, res) => {
+  app.post("/api/journals", requireAuth, async (req, res) => {
     try {
-      const journal = insertJournalSchema.parse(req.body);
+      const journal = insertJournalSchema.parse({
+        ...req.body,
+        userId: req.user!.id, // Always use the authenticated user's ID
+      });
       const result = await storage.createJournal(journal);
       res.json(result);
     } catch (error) {
@@ -45,9 +64,14 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/journals/:userId", async (req, res) => {
+  app.get("/api/journals/:userId", requireAuth, async (req, res) => {
     try {
-      const journals = await storage.getJournalsByUser(Number(req.params.userId));
+      const userId = Number(req.params.userId);
+      // Only allow users to access their own journals
+      if (userId !== req.user!.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const journals = await storage.getJournalsByUser(userId);
       res.json(journals);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch journals" });
@@ -55,11 +79,15 @@ export function registerRoutes(app: Express) {
   });
 
   // Insights
-  app.post("/api/insights/generate", async (req, res) => {
+  app.post("/api/insights/generate", requireAuth, async (req, res) => {
     try {
       const { userId } = generateInsightsSchema.parse(req.body);
-      const trades = await storage.getTradesByUser(userId);
+      // Only allow users to generate insights for their own trades
+      if (userId !== req.user!.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
 
+      const trades = await storage.getTradesByUser(userId);
       if (!trades.length) {
         return res.status(400).json({ error: "No trades available for analysis" });
       }
@@ -76,9 +104,14 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/insights/:userId", async (req, res) => {
+  app.get("/api/insights/:userId", requireAuth, async (req, res) => {
     try {
-      const insights = await storage.getInsightsByUser(Number(req.params.userId));
+      const userId = Number(req.params.userId);
+      // Only allow users to access their own insights
+      if (userId !== req.user!.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const insights = await storage.getInsightsByUser(userId);
       res.json(insights);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch insights" });

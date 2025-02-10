@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { X, Plus, Loader2 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art"];
 const emotionOptions = [
@@ -48,13 +49,14 @@ const mistakeOptions = [
 
 export default function TradeForm() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [buys, setBuys] = useState([{ amount: "" }]);
   const [sells, setSells] = useState([{ amount: "" }]);
 
   const form = useForm<InsertTrade>({
     resolver: zodResolver(insertTradeSchema),
     defaultValues: {
-      userId: 1, // TODO: Replace with actual user ID
+      userId: user?.id,
       contractAddress: "",
       buyAmount: "0",
       sellAmount: "0",
@@ -70,7 +72,7 @@ export default function TradeForm() {
       return apiRequest("POST", "/api/trades", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trades/1"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades", user?.id] });
       toast({
         title: "Success",
         description: "Trade saved successfully.",

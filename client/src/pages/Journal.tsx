@@ -6,15 +6,19 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import JournalForm from "@/components/forms/JournalForm";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FolderPlus } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import type { Journal } from "@shared/schema";
 
 export default function Journal() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  const { data: journals } = useQuery({
-    queryKey: ["/api/journals/1"], // TODO: Replace with actual user ID
+  const { data: journals } = useQuery<Journal[]>({
+    queryKey: ["/api/journals", user?.id],
+    enabled: !!user,
   });
 
-  const folders = [...new Set(journals?.map((j: any) => j.folder))].filter(Boolean);
+  const folders = [...new Set(journals?.map((j) => j.folder))].filter(Boolean);
 
   return (
     <div className="h-full flex gap-6">
@@ -58,8 +62,8 @@ export default function Journal() {
         <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="space-y-4">
             {journals
-              ?.filter((j: any) => !selectedFolder || j.folder === selectedFolder)
-              .map((journal: any) => (
+              ?.filter((j) => !selectedFolder || j.folder === selectedFolder)
+              .map((journal) => (
                 <Card key={journal.id} className="p-6">
                   <h3 className="text-xl font-semibold mb-2">{journal.title}</h3>
                   <p className="text-sm text-muted-foreground mb-4">

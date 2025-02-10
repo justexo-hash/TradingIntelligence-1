@@ -19,7 +19,8 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   const { data: trades } = useQuery<Trade[]>({
-    queryKey: ["/api/trades/1"], // TODO: Replace with actual user ID
+    queryKey: ["/api/trades", user?.id],
+    enabled: !!user,
   });
 
   return (

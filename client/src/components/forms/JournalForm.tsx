@@ -24,6 +24,8 @@ import {
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import type { InsertJournal } from "@shared/schema";
 
 const folders = [
   { value: "daily", label: "Daily Reviews" },
@@ -35,11 +37,12 @@ const folders = [
 
 export default function JournalForm() {
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const form = useForm({
+  const form = useForm<InsertJournal>({
     resolver: zodResolver(insertJournalSchema),
     defaultValues: {
-      userId: 1, // TODO: Replace with actual user ID
+      userId: user?.id,
       title: "",
       content: "",
       folder: "",
@@ -47,11 +50,11 @@ export default function JournalForm() {
   });
 
   const journalMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: InsertJournal) => {
       return apiRequest("POST", "/api/journals", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/journals/1"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/journals", user?.id] });
       toast({
         title: "Success",
         description: "Journal entry saved successfully.",
@@ -72,7 +75,7 @@ export default function JournalForm() {
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: InsertJournal) => {
     journalMutation.mutate(data);
   };
 

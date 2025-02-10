@@ -5,10 +5,14 @@ import TradeForm from "@/components/forms/TradeForm";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import type { Trade } from "@shared/schema";
 
 export default function Trades() {
-  const { data: trades } = useQuery({
-    queryKey: ["/api/trades/1"], // TODO: Replace with actual user ID
+  const { user } = useAuth();
+  const { data: trades } = useQuery<Trade[]>({
+    queryKey: ["/api/trades", user?.id],
+    enabled: !!user,
   });
 
   return (
@@ -28,7 +32,7 @@ export default function Trades() {
 
       <ScrollArea className="h-[calc(100vh-8rem)]">
         <div className="space-y-4">
-          {trades?.map((trade: any) => (
+          {trades?.map((trade) => (
             <Card key={trade.id} className="p-6">
               <div className="flex justify-between items-start">
                 <div>
