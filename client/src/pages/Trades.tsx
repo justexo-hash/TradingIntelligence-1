@@ -58,7 +58,7 @@ export default function Trades() {
         <h1 className="text-3xl font-bold">Trades</h1>
         <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90">
               <PlusCircle className="mr-2 h-4 w-4" />
               New Trade
             </Button>
