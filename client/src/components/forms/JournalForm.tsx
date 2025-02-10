@@ -54,7 +54,7 @@ export default function JournalForm() {
       return apiRequest("POST", "/api/journals", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/journals", user?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/journals/${user?.id}`] });
       toast({
         title: "Success",
         description: "Journal entry saved successfully.",

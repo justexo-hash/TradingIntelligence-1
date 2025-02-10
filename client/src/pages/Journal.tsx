@@ -14,11 +14,13 @@ export default function Journal() {
   const { user } = useAuth();
 
   const { data: journals } = useQuery<Journal[]>({
-    queryKey: ["/api/journals", user?.id],
+    queryKey: [`/api/journals/${user?.id}`],
     enabled: !!user,
   });
 
-  const folders = [...new Set(journals?.map((j) => j.folder))].filter(Boolean);
+  const folders = journals 
+    ? [...new Set(journals.map((j) => j.folder))].filter(Boolean) 
+    : [];
 
   return (
     <div className="h-full flex gap-6">
