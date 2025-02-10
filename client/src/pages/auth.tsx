@@ -161,16 +161,12 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <div className="hidden md:flex flex-col justify-center p-8 bg-muted">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-4xl font-bold mb-4">
-            Track Your Trading Journey
-          </h1>
-          <p className="text-muted-foreground">
-            My Trading Pal helps you journal your trades, track your performance,
-            and gain AI-powered insights to improve your trading strategy.
-          </p>
-        </div>
+      <div className="hidden md:flex items-center justify-center p-8 bg-muted">
+        <img 
+          src="/login-hero.png" 
+          alt="Trading Journey"
+          className="max-w-md w-full object-contain"
+        />
       </div>
     </div>
   );
