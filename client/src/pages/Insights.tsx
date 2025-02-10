@@ -1,17 +1,20 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lightbulb, Loader2 } from "lucide-react";
+import { Lightbulb, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import type { Insight } from "@shared/schema";
 import { formatInsightContent } from "@/lib/ai";
+import { cn } from "@/lib/utils";
 
 export default function Insights() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [expandedInsights, setExpandedInsights] = useState<Record<number, boolean>>({});
 
   const { data: insights } = useQuery<Insight[]>({
     queryKey: [`/api/insights/${user?.id}`],
@@ -39,6 +42,13 @@ export default function Insights() {
     },
   });
 
+  const toggleInsight = (insightId: number) => {
+    setExpandedInsights(prev => ({
+      ...prev,
+      [insightId]: !prev[insightId]
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -60,12 +70,34 @@ export default function Insights() {
         <div className="space-y-4">
           {insights?.map((insight) => (
             <Card key={insight.id} className="p-6">
-              <p className="text-sm text-muted-foreground mb-4">
-                {new Date(insight.date).toLocaleDateString()}
-              </p>
-              <div className="whitespace-pre-wrap">
+              <div className="flex justify-between items-start">
+                <p className="text-sm text-muted-foreground">
+                  {new Date(insight.date).toLocaleDateString()}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleInsight(insight.id)}
+                  className="p-0 h-8 w-8"
+                >
+                  {expandedInsights[insight.id] ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <div
+                className={cn(
+                  "whitespace-pre-wrap overflow-hidden transition-[max-height] duration-300 ease-in-out",
+                  expandedInsights[insight.id] ? "max-h-[1000px]" : "max-h-24"
+                )}
+              >
                 {formatInsightContent(insight.content)}
               </div>
+              {!expandedInsights[insight.id] && insight.content.length > 150 && (
+                <div className="h-8 bg-gradient-to-b from-transparent to-background absolute bottom-0 left-0 right-0" />
+              )}
             </Card>
           ))}
         </div>
