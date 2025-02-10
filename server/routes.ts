@@ -23,6 +23,23 @@ export function registerRoutes(app: Express) {
     next();
   };
 
+  // Add the balance update endpoint
+  app.patch("/api/user/balance", requireAuth, async (req, res) => {
+    try {
+      const { balance } = req.body;
+      if (!balance || isNaN(Number(balance))) {
+        return res.status(400).json({ error: "Invalid balance value" });
+      }
+
+      await storage.updateUserBalance(req.user!.id, balance);
+      const updatedUser = await storage.getUser(req.user!.id);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating balance:", error);
+      res.status(500).json({ error: "Failed to update balance" });
+    }
+  });
+
   // Token information endpoint with better error handling
   app.get("/api/token/:contractAddress", async (req, res) => {
     try {

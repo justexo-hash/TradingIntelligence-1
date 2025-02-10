@@ -33,10 +33,10 @@ export default function Dashboard() {
 
   // Show balance dialog only for new users with 0 balance
   useEffect(() => {
-    if (user && user.accountBalance === "0" && !showBalanceDialog) {
+    if (user && Number(user.accountBalance) === 0 && !showBalanceDialog) {
       setShowBalanceDialog(true);
     }
-  }, [user?.accountBalance]);
+  }, [user]);
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden bg-gradient-to-b from-black via-black/95 to-black/90 pb-20">

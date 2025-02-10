@@ -28,9 +28,11 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
     mutationFn: async (newBalance: string) => {
       const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
       if (!response.ok) {
-        throw new Error("Failed to update balance");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update balance");
       }
-      return response;
+      const updatedUser = await response.json();
+      return updatedUser;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
