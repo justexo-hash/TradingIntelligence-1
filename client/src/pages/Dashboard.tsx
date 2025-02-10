@@ -23,32 +23,42 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col gap-4 overflow-x-hidden bg-black/40 backdrop-blur-sm p-4 pb-20 md:min-h-screen md:gap-6 md:p-6 md:pb-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-xl font-bold md:text-3xl bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
-          Dashboard
-        </h1>
-        <Select value={filter} onValueChange={(v: "pnl" | "winrate") => setFilter(v)}>
-          <SelectTrigger className="h-9 w-full max-w-[180px] border-[rgb(var(--solana-green))/0.2] bg-black/60">
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pnl">P&L</SelectItem>
-            <SelectItem value="winrate">Win Rate</SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden bg-gradient-to-b from-black via-black/95 to-black/90 pb-20 md:min-h-screen">
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+
+      <div className="relative flex flex-col gap-6 p-4 md:gap-8 md:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold md:text-4xl bg-gradient-to-r from-[rgb(var(--solana-green))] via-[rgb(var(--solana-purple))] to-[rgb(var(--solana-green))] bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your trading performance at a glance
+            </p>
+          </div>
+
+          <Select value={filter} onValueChange={(v: "pnl" | "winrate") => setFilter(v)}>
+            <SelectTrigger className="h-9 w-full max-w-[180px] border-none bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors">
+              <SelectValue placeholder="Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pnl">P&L</SelectItem>
+              <SelectItem value="winrate">Win Rate</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Stats trades={trades || []} />
+
+        <Card className="flex-1 overflow-hidden border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg p-6 shadow-lg">
+          <TradeCalendar
+            trades={trades || []}
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+            filter={filter}
+          />
+        </Card>
       </div>
-
-      <Stats trades={trades || []} />
-
-      <Card className="flex-1 overflow-hidden border-[rgb(var(--solana-green))/0.2] bg-black/60 backdrop-blur-sm p-4">
-        <TradeCalendar
-          trades={trades || []}
-          selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
-          filter={filter}
-        />
-      </Card>
     </div>
   );
 }

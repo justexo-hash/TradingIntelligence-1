@@ -25,48 +25,51 @@ export default function Stats({ trades }: StatsProps) {
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-3">
-      <Card className="p-4 border-[rgb(var(--solana-green))/0.2] bg-black/60 backdrop-blur-sm hover:bg-black/70 transition-colors">
+      <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-[rgb(var(--solana-green))] to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
         <div className="flex items-center">
-          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded-xl">
-            <DollarSign className="h-5 w-5 text-[rgb(var(--solana-green))]" />
+          <div className="p-3 bg-[rgb(var(--solana-green))/0.1] rounded-2xl shadow-inner">
+            <DollarSign className="h-6 w-6 text-[rgb(var(--solana-green))]" />
           </div>
-          <div className="ml-3">
-            <p className="text-xs font-medium text-muted-foreground">
+          <div className="ml-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Account Balance
             </p>
-            <h3 className="text-lg font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
               {stats.balance.toFixed(4)} SOL
             </h3>
           </div>
         </div>
       </Card>
 
-      <Card className="p-4 border-[rgb(var(--solana-green))/0.2] bg-black/60 backdrop-blur-sm hover:bg-black/70 transition-colors">
+      <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-[rgb(var(--solana-green))] to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
         <div className="flex items-center">
-          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded-xl">
-            <TrendingUp className="h-5 w-5 text-[rgb(var(--solana-green))]" />
+          <div className="p-3 bg-[rgb(var(--solana-green))/0.1] rounded-2xl shadow-inner">
+            <TrendingUp className="h-6 w-6 text-[rgb(var(--solana-green))]" />
           </div>
-          <div className="ml-3">
-            <p className="text-xs font-medium text-muted-foreground">
+          <div className="ml-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Net P&L
             </p>
-            <h3 className="text-lg font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
               {stats.balance.toFixed(4)} SOL
             </h3>
           </div>
         </div>
       </Card>
 
-      <Card className="p-4 border-[rgb(var(--solana-green))/0.2] bg-black/60 backdrop-blur-sm hover:bg-black/70 transition-colors">
+      <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-[rgb(var(--solana-green))] to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
         <div className="flex items-center">
-          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded-xl">
-            <Target className="h-5 w-5 text-[rgb(var(--solana-green))]" />
+          <div className="p-3 bg-[rgb(var(--solana-green))/0.1] rounded-2xl shadow-inner">
+            <Target className="h-6 w-6 text-[rgb(var(--solana-green))]" />
           </div>
-          <div className="ml-3">
-            <p className="text-xs font-medium text-muted-foreground">
+          <div className="ml-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Win Rate
             </p>
-            <h3 className="text-lg font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
               {winRate}% ({stats.winningTrades}/{stats.totalTrades})
             </h3>
           </div>
