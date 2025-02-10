@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Stats from "@/components/widgets/Stats";
 import TradeCalendar from "@/components/widgets/TradeCalendar";
+import LineChart from "@/components/widgets/LineChart";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -51,14 +52,21 @@ export default function Dashboard() {
 
         <Stats trades={trades || []} />
 
-        <Card className="flex-1 overflow-hidden border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg p-6 shadow-lg">
-          <TradeCalendar
-            trades={trades || []}
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-            filter={filter}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="flex-1 overflow-hidden border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg p-6 shadow-lg">
+            <TradeCalendar
+              trades={trades || []}
+              selectedMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
+              filter={filter}
+            />
+          </Card>
+
+          <LineChart 
+            trades={trades || []} 
+            accountBalance={user?.accountBalance || "0"}
           />
-        </Card>
+        </div>
       </div>
     </div>
   );

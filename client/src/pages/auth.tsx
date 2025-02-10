@@ -4,11 +4,23 @@ import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { insertUserSchema } from "@shared/schema";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 export default function AuthPage() {
@@ -43,13 +55,16 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader className="flex flex-col items-center">
-            <img src="/logo.png" alt="Logo" className="h-16 w-16 mb-2" />
+            <img src="/logo.png" alt="Logo" className="h-13 w-70 mb-2" />
             <CardDescription>
               Your personal trading journal and performance analyzer
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "register")}>
+            <Tabs
+              value={tab}
+              onValueChange={(v) => setTab(v as "login" | "register")}
+            >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -58,7 +73,9 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <Form {...loginForm}>
                   <form
-                    onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))}
+                    onSubmit={loginForm.handleSubmit((data) =>
+                      loginMutation.mutate(data),
+                    )}
                     className="space-y-4"
                   >
                     <FormField
@@ -68,7 +85,10 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter your username" {...field} />
+                            <Input
+                              placeholder="Enter your username"
+                              {...field}
+                            />
                           </FormControl>
                         </FormItem>
                       )}
@@ -109,7 +129,7 @@ export default function AuthPage() {
                 <Form {...registerForm}>
                   <form
                     onSubmit={registerForm.handleSubmit((data) =>
-                      registerMutation.mutate(data)
+                      registerMutation.mutate(data),
                     )}
                     className="space-y-4"
                   >
@@ -162,8 +182,8 @@ export default function AuthPage() {
       </div>
 
       <div className="hidden md:flex items-center justify-center p-8 bg-muted">
-        <img 
-          src="/login-hero.png" 
+        <img
+          src="/login-hero.png"
           alt="Trading Journey"
           className="max-w-md w-full object-contain"
         />
