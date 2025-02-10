@@ -37,7 +37,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useDebouncedCallback } from "use-debounce";
 
-const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art"];
+const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art", "Other"];
 const emotionOptions = [
   "Anxious",
   "Excited",
@@ -46,6 +46,7 @@ const emotionOptions = [
   "Bearish",
   "Relaxed",
   "Indifferent",
+  "Other",
 ];
 const mistakeOptions = [
   "No mistakes",
@@ -69,6 +70,9 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   const [buys, setBuys] = useState([{ amount: "" }]);
   const [sells, setSells] = useState([{ amount: "" }]);
   const [contractAddress, setContractAddress] = useState(editingTrade?.contractAddress || "");
+  const [customSetup, setCustomSetup] = useState("");
+  const [customEmotion, setCustomEmotion] = useState("");
+  const [customMistake, setCustomMistake] = useState("");
 
   const debouncedLookup = useDebouncedCallback((address: string) => {
     if (address) {
@@ -160,6 +164,10 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   });
 
   const onSubmit = (data: InsertTrade) => {
+    const finalSetup = data.setup?.map(s => s === "Other" ? customSetup : s).filter(Boolean);
+    const finalEmotion = data.emotion?.map(e => e === "Other" ? customEmotion : e).filter(Boolean);
+    const finalMistakes = data.mistakes?.map(m => m === "Other" ? customMistake : m).filter(Boolean);
+
     const totalBuyAmount = buys
       .reduce((sum, buy) => sum + (Number(buy.amount) || 0), 0)
       .toString();
@@ -174,6 +182,9 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
       tokenName: tokenInfo?.name || null,
       tokenSymbol: tokenInfo?.symbol || null,
       tokenImage: tokenInfo?.image || null,
+      setup: finalSetup,
+      emotion: finalEmotion,
+      mistakes: finalMistakes,
     };
 
     if (editingTrade) {
@@ -371,6 +382,14 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                     </FormItem>
                   ))}
                 </div>
+                {field.value?.includes("Other") && (
+                  <Input
+                    placeholder="Describe your setup..."
+                    value={customSetup}
+                    onChange={(e) => setCustomSetup(e.target.value)}
+                    className="mt-2"
+                  />
+                )}
               </FormItem>
             )}
           />
@@ -400,6 +419,14 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                     </FormItem>
                   ))}
                 </div>
+                {field.value?.includes("Other") && (
+                  <Input
+                    placeholder="Describe your emotion..."
+                    value={customEmotion}
+                    onChange={(e) => setCustomEmotion(e.target.value)}
+                    className="mt-2"
+                  />
+                )}
               </FormItem>
             )}
           />
@@ -429,6 +456,28 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                     </FormItem>
                   ))}
                 </div>
+                {field.value?.includes("Other") && (
+                  <Input
+                    placeholder="Describe your mistake..."
+                    value={customMistake}
+                    onChange={(e) => setCustomMistake(e.target.value)}
+                    className="mt-2"
+                  />
+                )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea {...field} placeholder="Add any additional notes..." />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
