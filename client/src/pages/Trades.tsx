@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
@@ -7,7 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { Trade } from "@shared/schema";
-import { useState } from "react";
 
 export default function Trades() {
   const { user } = useAuth();
@@ -22,14 +22,14 @@ export default function Trades() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Trades</h1>
-        <Dialog onOpenChange={() => setEditingTrade(null)}>
+        <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Trade
             </Button>
           </DialogTrigger>
-          <TradeForm editingTrade={editingTrade} />
+          <TradeForm editingTrade={null} />
         </Dialog>
       </div>
 
@@ -61,7 +61,7 @@ export default function Trades() {
                       </span>
                     </p>
                   </div>
-                  <Dialog onOpenChange={() => setEditingTrade(null)}>
+                  <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
@@ -71,7 +71,7 @@ export default function Trades() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    <TradeForm editingTrade={editingTrade} />
+                    {editingTrade?.id === trade.id && <TradeForm editingTrade={trade} />}
                   </Dialog>
                 </div>
               </div>
