@@ -45,7 +45,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserBalance(id: number, balance: string): Promise<void> {
-    await db.update(users)
+    await db
+      .update(users)
       .set({ accountBalance: balance })
       .where(eq(users.id, id));
   }
@@ -78,7 +79,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTradesByDate(userId: number, date: Date): Promise<Trade[]> {
-    return db.select()
+    return db
+      .select()
       .from(trades)
       .where(eq(trades.userId, userId))
       .where(eq(trades.date, date));

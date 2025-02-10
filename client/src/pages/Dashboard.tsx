@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Stats from "@/components/widgets/Stats";
 import TradeCalendar from "@/components/widgets/TradeCalendar";
@@ -32,7 +32,7 @@ export default function Dashboard() {
   });
 
   // Show balance dialog for new users
-  useState(() => {
+  useEffect(() => {
     if (user && user.accountBalance === "0") {
       setShowBalanceDialog(true);
     }
