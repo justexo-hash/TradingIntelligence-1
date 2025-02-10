@@ -46,10 +46,22 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserBalance(id: number, balance: string): Promise<void> {
     console.log('Storage: Updating balance for user', id, 'to', balance);
-    await db
-      .update(users)
-      .set({ accountBalance: balance })
-      .where(eq(users.id, id));
+    try {
+      await db
+        .update(users)
+        .set({ accountBalance: balance })
+        .where(eq(users.id, id));
+
+      // Verify the update
+      const [updatedUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id));
+      console.log('Storage: Updated user:', updatedUser);
+    } catch (error) {
+      console.error('Storage: Error updating balance:', error);
+      throw error;
+    }
   }
 
   async createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade> {

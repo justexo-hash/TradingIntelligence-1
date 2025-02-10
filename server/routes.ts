@@ -31,8 +31,10 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid balance value" });
       }
 
+      console.log('Balance update request:', { userId: req.user!.id, newBalance: balance });
       await storage.updateUserBalance(req.user!.id, balance);
       const updatedUser = await storage.getUser(req.user!.id);
+      console.log('User after balance update:', updatedUser);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating balance:", error);
@@ -131,18 +133,24 @@ export function registerRoutes(app: Express) {
         userId: req.user!.id,
       });
 
+      console.log('Creating trade:', trade);
       const result = await storage.createTrade(trade);
+      console.log('Trade created:', result);
 
       // Calculate the impact on user's balance
       const tradePnL = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
       const user = await storage.getUser(req.user!.id);
+      console.log('Current user state:', user);
 
       if (user) {
         // Update the balance by adding the PnL from the trade
         const currentBalance = Number(user.accountBalance || 0);
         const newBalance = (currentBalance + tradePnL).toFixed(4);
-        console.log('Updating balance:', { currentBalance, tradePnL, newBalance });
+        console.log('Balance calculation:', { currentBalance, tradePnL, newBalance });
+
         await storage.updateUserBalance(req.user!.id, newBalance);
+        const updatedUser = await storage.getUser(req.user!.id);
+        console.log('User after balance update:', updatedUser);
       }
 
       res.json(result);
