@@ -3,6 +3,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -22,10 +29,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Trade } from "@shared/schema";
 
+type SortOption = "name" | "date" | "pnl" | "buyAmount";
+
 export default function Trades() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("date");
 
   const { data: trades } = useQuery<Trade[]>({
     queryKey: [`/api/trades/${user?.id}`],
@@ -52,10 +62,42 @@ export default function Trades() {
     },
   });
 
+  const sortedTrades = [...(trades || [])].sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        const aName = a.tokenName || a.contractAddress;
+        const bName = b.tokenName || b.contractAddress;
+        return aName.localeCompare(bName);
+      case "date":
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      case "pnl":
+        const aPnL = Number(a.sellAmount) - Number(a.buyAmount);
+        const bPnL = Number(b.sellAmount) - Number(b.buyAmount);
+        return bPnL - aPnL;
+      case "buyAmount":
+        return Number(b.buyAmount) - Number(a.buyAmount);
+      default:
+        return 0;
+    }
+  });
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Trades</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold">Trades</h1>
+          <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+            <SelectTrigger className="w-[180px] bg-black/60 backdrop-blur-sm border-none">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name (A-Z)</SelectItem>
+              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="pnl">P&L</SelectItem>
+              <SelectItem value="buyAmount">Buy Amount</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90">
@@ -69,8 +111,8 @@ export default function Trades() {
 
       <ScrollArea className="h-[calc(100vh-10rem)]">
         <div className="grid gap-4">
-          {trades?.map((trade) => (
-            <Card key={trade.id} className="p-6">
+          {sortedTrades?.map((trade) => (
+            <Card key={trade.id} className="p-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-none">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
