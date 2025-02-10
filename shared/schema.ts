@@ -44,6 +44,9 @@ export const insights = pgTable("insights", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+}).extend({
+  username: z.string().min(3, "Username must be at least 3 characters").max(50, "Username must be less than 50 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password must be less than 100 characters"),
 });
 
 export const insertTradeSchema = createInsertSchema(trades).omit({
