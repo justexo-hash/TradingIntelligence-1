@@ -13,6 +13,8 @@ export interface IStorage {
 
   // Trades
   createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade>;
+  getTrade(id: number): Promise<Trade | undefined>;
+  updateTrade(id: number, trade: Omit<Trade, "id" | "date">): Promise<Trade>;
   getTradesByUser(userId: number): Promise<Trade[]>;
   getTradesByDate(userId: number, date: Date): Promise<Trade[]>;
 
@@ -50,6 +52,20 @@ export class DatabaseStorage implements IStorage {
   async createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade> {
     const [newTrade] = await db.insert(trades).values(trade).returning();
     return newTrade;
+  }
+
+  async getTrade(id: number): Promise<Trade | undefined> {
+    const [trade] = await db.select().from(trades).where(eq(trades.id, id));
+    return trade;
+  }
+
+  async updateTrade(id: number, trade: Omit<Trade, "id" | "date">): Promise<Trade> {
+    const [updatedTrade] = await db
+      .update(trades)
+      .set(trade)
+      .where(eq(trades.id, id))
+      .returning();
+    return updatedTrade;
   }
 
   async getTradesByUser(userId: number): Promise<Trade[]> {
