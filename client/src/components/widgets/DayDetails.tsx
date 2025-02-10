@@ -54,9 +54,9 @@ export default function DayDetails({ date, trades, onClose }: DayDetailsProps) {
   });
 
   return (
-    <Card className="p-6 card-gradient space-y-6">
+    <Card className="p-6 space-y-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-gradient">
+        <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
           {format(date, "MMMM d, yyyy")}
         </h3>
         <Button variant="outline" onClick={onClose}>
@@ -81,6 +81,87 @@ export default function DayDetails({ date, trades, onClose }: DayDetailsProps) {
         </div>
       </div>
 
+      <div className="space-y-4">
+        <h4 className="font-medium">Trade Details</h4>
+        {trades.map((trade) => (
+          <Card key={trade.id} className="p-4 bg-black/40">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {trade.contractAddress}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {new Date(trade.date).toLocaleTimeString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-semibold">
+                  P&L:{" "}
+                  <span
+                    className={
+                      Number(trade.sellAmount) - Number(trade.buyAmount) > 0
+                        ? "text-[rgb(var(--solana-green))]"
+                        : "text-red-500"
+                    }
+                  >
+                    {(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)} SOL
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <h4 className="font-medium mb-2">Setup</h4>
+                <div className="flex flex-wrap gap-2">
+                  {trade.setup?.map((s) => (
+                    <span
+                      key={s}
+                      className="px-2 py-1 bg-[rgb(var(--solana-green))]/0.1 rounded text-sm"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Emotion</h4>
+                <div className="flex flex-wrap gap-2">
+                  {trade.emotion?.map((e) => (
+                    <span
+                      key={e}
+                      className="px-2 py-1 bg-[rgb(var(--solana-green))]/0.1 rounded text-sm"
+                    >
+                      {e}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Mistakes</h4>
+                <div className="flex flex-wrap gap-2">
+                  {trade.mistakes?.map((m) => (
+                    <span
+                      key={m}
+                      className="px-2 py-1 bg-destructive/10 rounded text-sm"
+                    >
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {trade.notes && (
+              <div className="mt-4 pt-4 border-t border-[rgb(var(--solana-green))]/10">
+                <h4 className="font-medium mb-2">Notes</h4>
+                <p className="text-sm text-muted-foreground">{trade.notes}</p>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+
       <div className="space-y-2">
         <h4 className="font-medium">Daily Notes</h4>
         <Textarea
@@ -90,7 +171,7 @@ export default function DayDetails({ date, trades, onClose }: DayDetailsProps) {
           className="min-h-[150px] bg-black/50"
         />
         <Button
-          className="w-full button-gradient"
+          className="w-full bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
           onClick={() => saveNotesMutation.mutate()}
           disabled={!notes.trim() || saveNotesMutation.isPending}
         >
