@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,6 +16,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useDebouncedCallback } from "use-debounce";
 
 const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art"];
 const emotionOptions = [
@@ -57,6 +59,18 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   const { user } = useAuth();
   const [buys, setBuys] = useState([{ amount: "" }]);
   const [sells, setSells] = useState([{ amount: "" }]);
+  const [contractAddress, setContractAddress] = useState(editingTrade?.contractAddress || "");
+
+  const debouncedLookup = useDebouncedCallback((address: string) => {
+    if (address) {
+      setContractAddress(address);
+    }
+  }, 500);
+
+  const { data: tokenInfo, isLoading: isLoadingToken } = useQuery({
+    queryKey: [`/api/token/${contractAddress}`],
+    enabled: !!contractAddress,
+  });
 
   const form = useForm<InsertTrade>({
     resolver: zodResolver(insertTradeSchema),
@@ -170,7 +184,26 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Contract Address</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <div className="space-y-2">
+                    <Input 
+                      {...field} 
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        debouncedLookup(e.target.value);
+                      }}
+                    />
+                    {isLoadingToken && (
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Looking up token...
+                      </div>
+                    )}
+                    {tokenInfo && (
+                      <FormDescription className="text-sm">
+                        Token: {tokenInfo.name} ({tokenInfo.symbol})
+                      </FormDescription>
+                    )}
+                  </div>
                 </FormControl>
               </FormItem>
             )}
