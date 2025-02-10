@@ -3,40 +3,37 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Lightbulb, Loader2 } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import type { Insight } from "@shared/schema";
 import { formatInsightContent } from "@/lib/ai";
 
 export default function Insights() {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: insights } = useQuery<Insight[]>({
-    queryKey: ["/api/insights/1"], // TODO: Replace with actual user ID
+    queryKey: [`/api/insights/${user?.id}`],
+    enabled: !!user,
   });
 
   const generateMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/insights/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: 1 }), // TODO: Replace with actual user ID
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to generate insights");
-      return res.json();
+      if (!user?.id) throw new Error("User not authenticated");
+      return apiRequest("POST", "/api/insights/generate", { userId: user.id });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/insights/1"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/insights/${user?.id}`] });
       toast({
         title: "Success",
         description: "New insights have been generated.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to generate insights. Please try again.",
+        description: error.message || "Failed to generate insights. Please try again.",
         variant: "destructive",
       });
     },
@@ -48,7 +45,7 @@ export default function Insights() {
         <h1 className="text-3xl font-bold">Insights</h1>
         <Button
           onClick={() => generateMutation.mutate()}
-          disabled={generateMutation.isPending}
+          disabled={generateMutation.isPending || !user}
         >
           {generateMutation.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
