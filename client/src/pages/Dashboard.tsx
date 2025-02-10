@@ -23,25 +23,25 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-        <div className="w-full sm:w-auto">
-          <Select value={filter} onValueChange={(v: "pnl" | "winrate") => setFilter(v)}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pnl">P&L</SelectItem>
-              <SelectItem value="winrate">Win Rate</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="flex flex-col gap-3 p-3 md:gap-6 md:p-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-xl font-bold md:text-3xl">Dashboard</h1>
+        <Select value={filter} onValueChange={(v: "pnl" | "winrate") => setFilter(v)}>
+          <SelectTrigger className="h-9 w-full md:w-[180px]">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pnl">P&L</SelectItem>
+            <SelectItem value="winrate">Win Rate</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Stats trades={trades || []} />
+      <div className="md:grid md:grid-cols-3 md:gap-6">
+        <Stats trades={trades || []} />
+      </div>
 
-      <Card className="p-4 md:p-6">
+      <Card className="overflow-hidden p-3 md:p-6">
         <TradeCalendar
           trades={trades || []}
           selectedMonth={selectedMonth}
