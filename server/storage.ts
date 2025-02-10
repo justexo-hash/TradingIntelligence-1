@@ -10,7 +10,6 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(id: number, balance: string): Promise<void>;
-  updateLoginStreak(id: number): Promise<void>;
 
   // Trades
   createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade>;
@@ -46,15 +45,6 @@ export class DatabaseStorage implements IStorage {
     await db.update(users)
       .set({ accountBalance: balance })
       .where(eq(users.id, id));
-  }
-
-  async updateLoginStreak(id: number): Promise<void> {
-    const user = await this.getUser(id);
-    if (user) {
-      await db.update(users)
-        .set({ loginStreak: user.loginStreak + 1 })
-        .where(eq(users.id, id));
-    }
   }
 
   async createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade> {

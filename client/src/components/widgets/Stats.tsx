@@ -1,13 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Target, Star } from "lucide-react";
-import LoginStreakAnimation from "./LoginStreakAnimation";
+import { DollarSign, TrendingUp, Target } from "lucide-react";
 
 interface StatsProps {
   trades: any[];
-  loginStreak: number;
 }
 
-export default function Stats({ trades, loginStreak }: StatsProps) {
+export default function Stats({ trades }: StatsProps) {
   const stats = trades?.reduce(
     (acc, trade) => {
       const pnl = Number(trade.sellAmount) - Number(trade.buyAmount);
@@ -26,7 +24,7 @@ export default function Stats({ trades, loginStreak }: StatsProps) {
     : "0.0";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <Card className="p-6 card-gradient">
         <div className="flex items-center">
           <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
@@ -71,23 +69,6 @@ export default function Stats({ trades, loginStreak }: StatsProps) {
             <h3 className="text-2xl font-bold text-gradient">
               {winRate}% ({stats.winningTrades}/{stats.totalTrades})
             </h3>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6 card-gradient">
-        <div className="flex items-center">
-          <div className="p-2 bg-[rgb(var(--solana-green))/0.1] rounded">
-            <Star className="h-5 w-5 text-[rgb(var(--solana-green))]" />
-          </div>
-          <div className="ml-4 relative">
-            <p className="text-sm font-medium text-muted-foreground">
-              Login Streak
-            </p>
-            <LoginStreakAnimation
-              streak={loginStreak}
-              className="relative h-8"
-            />
           </div>
         </div>
       </Card>

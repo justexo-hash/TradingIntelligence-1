@@ -39,7 +39,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <Stats trades={trades || []} loginStreak={user?.loginStreak || 0} />
+      <Stats trades={trades || []} />
 
       <Card className="p-6">
         <TradeCalendar

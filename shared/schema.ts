@@ -7,7 +7,6 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   accountBalance: decimal("account_balance").notNull().default("0"),
-  loginStreak: integer("login_streak").notNull().default(0),
 });
 
 export const trades = pgTable("trades", {
