@@ -195,13 +195,13 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   };
 
   return (
-    <DialogContent className="sm:max-w-[500px]">
+    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{editingTrade ? "Edit Trade" : "New Trade"}</DialogTitle>
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="contractAddress"
@@ -482,7 +482,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
             )}
           />
 
-          <div className="flex justify-end gap-4">
+          <div className="sticky bottom-0 pt-4 bg-background border-t flex justify-end gap-4">
             <DialogClose asChild>
               <Button type="button" variant="outline" data-button="close">
                 Cancel

@@ -53,8 +53,8 @@ export default function Trades() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Trades</h1>
         <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
           <DialogTrigger asChild>
@@ -67,8 +67,8 @@ export default function Trades() {
         </Dialog>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-8rem)]">
-        <div className="space-y-4">
+      <ScrollArea className="h-[calc(100vh-10rem)]">
+        <div className="grid gap-4">
           {trades?.map((trade) => (
             <Card key={trade.id} className="p-6">
               <div className="flex justify-between items-start">
