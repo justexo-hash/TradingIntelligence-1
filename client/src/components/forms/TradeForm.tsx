@@ -4,8 +4,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
 import { insertTradeSchema, type InsertTrade } from "@shared/schema";
-import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,15 +35,15 @@ const emotionOptions = [
   "Indifferent",
 ];
 const mistakeOptions = [
-  "no mistakes",
-  "bought too much",
-  "bought too little",
-  "sold too early",
-  "sold too late",
-  "setup oversight",
-  "distracted",
-  "too little volume",
-  "other",
+  "No mistakes",
+  "Bought too much",
+  "Bought too little",
+  "Sold too early",
+  "Sold too late",
+  "Setup Oversight",
+  "Distracted",
+  "Too little volume",
+  "Other",
 ];
 
 export default function TradeForm() {
@@ -171,7 +182,9 @@ export default function TradeForm() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSells(sells.filter((_, idx) => idx !== i))}
+                    onClick={() =>
+                      setSells(sells.filter((_, idx) => idx !== i))
+                    }
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -196,7 +209,10 @@ export default function TradeForm() {
                 <FormLabel>Setup</FormLabel>
                 <div className="grid grid-cols-2 gap-2">
                   {setupOptions.map((option) => (
-                    <FormItem key={option} className="flex items-center space-x-3">
+                    <FormItem
+                      key={option}
+                      className="flex items-center space-x-3"
+                    >
                       <Checkbox
                         checked={field.value?.includes(option)}
                         onCheckedChange={(checked) => {
@@ -222,7 +238,10 @@ export default function TradeForm() {
                 <FormLabel>Emotion</FormLabel>
                 <div className="grid grid-cols-2 gap-2">
                   {emotionOptions.map((option) => (
-                    <FormItem key={option} className="flex items-center space-x-3">
+                    <FormItem
+                      key={option}
+                      className="flex items-center space-x-3"
+                    >
                       <Checkbox
                         checked={field.value?.includes(option)}
                         onCheckedChange={(checked) => {
@@ -248,7 +267,10 @@ export default function TradeForm() {
                 <FormLabel>Mistakes</FormLabel>
                 <div className="grid grid-cols-2 gap-2">
                   {mistakeOptions.map((option) => (
-                    <FormItem key={option} className="flex items-center space-x-3">
+                    <FormItem
+                      key={option}
+                      className="flex items-center space-x-3"
+                    >
                       <Checkbox
                         checked={field.value?.includes(option)}
                         onCheckedChange={(checked) => {
