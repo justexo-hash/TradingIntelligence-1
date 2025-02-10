@@ -44,6 +44,7 @@ export default function TradeCalendar({
 
   const DayContent = ({ date }: DayContentProps) => {
     const dayTrades = tradesByDate?.[date.toDateString()];
+    const isSelected = selectedDate?.toDateString() === date.toDateString();
     if (!dayTrades) return <div>{date.getDate()}</div>;
 
     const winRate = dayTrades.trades.length
@@ -53,15 +54,13 @@ export default function TradeCalendar({
     return (
       <div
         className={cn(
-          "w-full h-full p-2 ring-1 ring-inset",
+          "w-full h-full p-2 ring-1 ring-inset transition-colors",
           dayTrades.trades.length > 0 && "ring-white/20 bg-white/5",
-          filter === "pnl"
-            ? dayTrades.pnl > 0
-              ? "bg-[rgb(var(--solana-green))/0.1]"
-              : "bg-red-900/20"
-            : winRate >= 50
-            ? "bg-[rgb(var(--solana-green))/0.1]"
-            : "bg-red-900/20"
+          isSelected && "ring-[rgb(var(--solana-green))] bg-[rgb(var(--solana-green))]/20",
+          !isSelected && filter === "pnl" && dayTrades.pnl > 0 && "bg-[rgb(var(--solana-green))]/10",
+          !isSelected && filter === "pnl" && dayTrades.pnl <= 0 && "bg-red-900/20",
+          !isSelected && filter === "winrate" && winRate >= 50 && "bg-[rgb(var(--solana-green))]/10",
+          !isSelected && filter === "winrate" && winRate < 50 && "bg-red-900/20"
         )}
       >
         <div className="font-normal">{date.getDate()}</div>
