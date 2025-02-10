@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest } from "@/lib/queryClient";
-import { insertTradeSchema, type InsertTrade } from "@shared/schema";
+import { insertTradeSchema, type InsertTrade, type Trade } from "@shared/schema";
 import {
   DialogContent,
   DialogHeader,
@@ -47,7 +47,11 @@ const mistakeOptions = [
   "Other",
 ];
 
-export default function TradeForm() {
+interface TradeFormProps {
+  editingTrade?: Trade | null;
+}
+
+export default function TradeForm({ editingTrade }: TradeFormProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [buys, setBuys] = useState([{ amount: "" }]);
@@ -67,7 +71,18 @@ export default function TradeForm() {
     },
   });
 
-  const tradeMutation = useMutation({
+  useEffect(() => {
+    if (editingTrade) {
+      form.reset({
+        ...editingTrade,
+        userId: user?.id,
+      });
+      setBuys([{ amount: editingTrade.buyAmount }]);
+      setSells(editingTrade.sellAmount ? [{ amount: editingTrade.sellAmount }] : [{ amount: "" }]);
+    }
+  }, [editingTrade, form, user?.id]);
+
+  const createTradeMutation = useMutation({
     mutationFn: async (data: InsertTrade) => {
       return apiRequest("POST", "/api/trades", data);
     },
@@ -93,6 +108,32 @@ export default function TradeForm() {
     },
   });
 
+  const updateTradeMutation = useMutation({
+    mutationFn: async (data: InsertTrade & { id: number }) => {
+      return apiRequest("PATCH", `/api/trades/${data.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      toast({
+        title: "Success",
+        description: "Trade updated successfully.",
+      });
+      form.reset();
+      // Find and click the DialogClose button
+      const closeButton = document.querySelector('[data-button="close"]');
+      if (closeButton instanceof HTMLElement) {
+        closeButton.click();
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update trade. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: InsertTrade) => {
     const totalBuyAmount = buys
       .reduce((sum, buy) => sum + (Number(buy.amount) || 0), 0)
@@ -101,17 +142,23 @@ export default function TradeForm() {
       .reduce((sum, sell) => sum + (Number(sell.amount) || 0), 0)
       .toString();
 
-    tradeMutation.mutate({
+    const tradeData = {
       ...data,
       buyAmount: totalBuyAmount,
       sellAmount: totalSellAmount,
-    });
+    };
+
+    if (editingTrade) {
+      updateTradeMutation.mutate({ ...tradeData, id: editingTrade.id });
+    } else {
+      createTradeMutation.mutate(tradeData);
+    }
   };
 
   return (
     <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle>New Trade</DialogTitle>
+        <DialogTitle>{editingTrade ? "Edit Trade" : "New Trade"}</DialogTitle>
       </DialogHeader>
 
       <Form {...form}>
@@ -296,11 +343,14 @@ export default function TradeForm() {
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={tradeMutation.isPending}>
-              {tradeMutation.isPending && (
+            <Button
+              type="submit"
+              disabled={createTradeMutation.isPending || updateTradeMutation.isPending}
+            >
+              {(createTradeMutation.isPending || updateTradeMutation.isPending) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Save Trade
+              {editingTrade ? "Update" : "Save"} Trade
             </Button>
           </div>
         </form>

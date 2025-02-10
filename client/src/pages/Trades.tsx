@@ -4,12 +4,15 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import TradeForm from "@/components/forms/TradeForm";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { Trade } from "@shared/schema";
+import { useState } from "react";
 
 export default function Trades() {
   const { user } = useAuth();
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
+
   const { data: trades } = useQuery<Trade[]>({
     queryKey: [`/api/trades/${user?.id}`],
     enabled: !!user,
@@ -19,14 +22,14 @@ export default function Trades() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Trades</h1>
-        <Dialog>
+        <Dialog onOpenChange={() => setEditingTrade(null)}>
           <DialogTrigger asChild>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Trade
             </Button>
           </DialogTrigger>
-          <TradeForm />
+          <TradeForm editingTrade={editingTrade} />
         </Dialog>
       </div>
 
@@ -43,19 +46,33 @@ export default function Trades() {
                     {new Date(trade.date).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold">
-                    P&L:{" "}
-                    <span
-                      className={
-                        Number(trade.sellAmount) - Number(trade.buyAmount) > 0
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }
-                    >
-                      {(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)} SOL
-                    </span>
-                  </p>
+                <div className="flex items-start gap-4">
+                  <div className="text-right">
+                    <p className="text-lg font-semibold">
+                      P&L:{" "}
+                      <span
+                        className={
+                          Number(trade.sellAmount) - Number(trade.buyAmount) > 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }
+                      >
+                        {(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)} SOL
+                      </span>
+                    </p>
+                  </div>
+                  <Dialog onOpenChange={() => setEditingTrade(null)}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingTrade(trade)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <TradeForm editingTrade={editingTrade} />
+                  </Dialog>
                 </div>
               </div>
 

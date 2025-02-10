@@ -50,6 +50,30 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Add the new PATCH endpoint for updating trades
+  app.patch("/api/trades/:id", requireAuth, async (req, res) => {
+    try {
+      const tradeId = Number(req.params.id);
+      const trade = await storage.getTrade(tradeId);
+
+      // Check if trade exists and belongs to the authenticated user
+      if (!trade || trade.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      const updatedTrade = insertTradeSchema.parse({
+        ...req.body,
+        userId: req.user!.id,
+      });
+
+      const result = await storage.updateTrade(tradeId, updatedTrade);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid trade data" });
+    }
+  });
+
+
   // Journals
   app.post("/api/journals", requireAuth, async (req, res) => {
     try {
