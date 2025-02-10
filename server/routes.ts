@@ -128,20 +128,26 @@ export function registerRoutes(app: Express) {
     try {
       const trade = insertTradeSchema.parse({
         ...req.body,
-        userId: req.user!.id, // Always use the authenticated user's ID
+        userId: req.user!.id,
       });
+
       const result = await storage.createTrade(trade);
 
       // Calculate the impact on user's balance
       const tradePnL = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
       const user = await storage.getUser(req.user!.id);
+
       if (user) {
-        const newBalance = (Number(user.accountBalance) + tradePnL).toString();
+        // Update the balance by adding the PnL from the trade
+        const currentBalance = Number(user.accountBalance || 0);
+        const newBalance = (currentBalance + tradePnL).toFixed(4);
+        console.log('Updating balance:', { currentBalance, tradePnL, newBalance });
         await storage.updateUserBalance(req.user!.id, newBalance);
       }
 
       res.json(result);
     } catch (error) {
+      console.error("Error creating trade:", error);
       res.status(400).json({ error: "Invalid trade data" });
     }
   });

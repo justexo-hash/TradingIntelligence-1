@@ -45,6 +45,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserBalance(id: number, balance: string): Promise<void> {
+    console.log('Storage: Updating balance for user', id, 'to', balance);
     await db
       .update(users)
       .set({ accountBalance: balance })
