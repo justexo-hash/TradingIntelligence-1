@@ -24,6 +24,7 @@ import { X, Plus, Loader2 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art"];
 const emotionOptions = [
@@ -68,6 +69,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
       emotion: [],
       mistakes: [],
       notes: "",
+      date: new Date(),
     },
   });
 
@@ -93,7 +95,6 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
         description: "Trade saved successfully.",
       });
       form.reset();
-      // Find and click the DialogClose button
       const closeButton = document.querySelector('[data-button="close"]');
       if (closeButton instanceof HTMLElement) {
         closeButton.click();
@@ -119,7 +120,6 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
         description: "Trade updated successfully.",
       });
       form.reset();
-      // Find and click the DialogClose button
       const closeButton = document.querySelector('[data-button="close"]');
       if (closeButton instanceof HTMLElement) {
         closeButton.click();
@@ -171,6 +171,22 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                 <FormLabel>Contract Address</FormLabel>
                 <FormControl>
                   <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    date={field.value}
+                    onSelect={field.onChange}
+                  />
                 </FormControl>
               </FormItem>
             )}

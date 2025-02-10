@@ -45,7 +45,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertTradeSchema = createInsertSchema(trades).omit({
   id: true,
-  date: true,
+}).extend({
+  date: z.coerce.date(),
 });
 
 export const insertJournalSchema = createInsertSchema(journals).omit({
