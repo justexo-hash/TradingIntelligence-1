@@ -115,7 +115,7 @@ export function registerRoutes(app: Express) {
       res.json(tokenData);
     } catch (error) {
       console.error("Error fetching token info:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to fetch token information",
         details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString()
@@ -131,6 +131,15 @@ export function registerRoutes(app: Express) {
         userId: req.user!.id, // Always use the authenticated user's ID
       });
       const result = await storage.createTrade(trade);
+
+      // Calculate the impact on user's balance
+      const tradePnL = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
+      const user = await storage.getUser(req.user!.id);
+      if (user) {
+        const newBalance = (Number(user.accountBalance) + tradePnL).toString();
+        await storage.updateUserBalance(req.user!.id, newBalance);
+      }
+
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: "Invalid trade data" });

@@ -119,6 +119,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
         description: "Trade saved successfully.",
@@ -144,6 +145,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
         description: "Trade updated successfully.",
