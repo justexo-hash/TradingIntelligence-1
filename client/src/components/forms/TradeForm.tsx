@@ -17,11 +17,20 @@ import {
   FormItem,
   FormLabel,
   FormDescription,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus, Loader2 } from "lucide-react";
+import { X, Plus, Loader2, AlertCircle } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -67,9 +76,10 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
     }
   }, 500);
 
-  const { data: tokenInfo, isLoading: isLoadingToken } = useQuery({
+  const { data: tokenInfo, isLoading: isLoadingToken, error: tokenError } = useQuery({
     queryKey: [`/api/token/${contractAddress}`],
     enabled: !!contractAddress,
+    retry: 1, // Only retry once to avoid too many failed requests
   });
 
   const form = useForm<InsertTrade>({
@@ -198,13 +208,24 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                         Looking up token...
                       </div>
                     )}
+                    {tokenError && (
+                      <div className="flex items-center text-sm text-destructive">
+                        <AlertCircle className="mr-2 h-4 w-4" />
+                        Could not fetch token information. Please verify the contract address.
+                      </div>
+                    )}
                     {tokenInfo && (
                       <FormDescription className="text-sm">
-                        Token: {tokenInfo.name} ({tokenInfo.symbol})
+                        {tokenInfo.name ? (
+                          <>Token: {tokenInfo.name} ({tokenInfo.symbol})</>
+                        ) : (
+                          "Token information not available"
+                        )}
                       </FormDescription>
                     )}
                   </div>
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

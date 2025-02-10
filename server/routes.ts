@@ -23,18 +23,39 @@ export function registerRoutes(app: Express) {
     next();
   };
 
-  // Token information endpoint
+  // Token information endpoint with better error handling
   app.get("/api/token/:contractAddress", async (req, res) => {
     try {
       const response = await fetch(`https://frontend-api.pump.fun/api/token/${req.params.contractAddress}`);
+
       if (!response.ok) {
+        // Log the full error response for debugging
+        const errorText = await response.text();
+        console.error("Token lookup failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          contractAddress: req.params.contractAddress
+        });
+
         throw new Error(`Failed to fetch token info: ${response.statusText}`);
       }
+
       const data = await response.json();
+
+      // Validate the response has the expected fields
+      if (!data || (typeof data !== 'object')) {
+        throw new Error("Invalid token data received");
+      }
+
       res.json(data);
     } catch (error) {
       console.error("Error fetching token info:", error);
-      res.status(500).json({ error: "Failed to fetch token information" });
+      res.status(500).json({ 
+        error: "Failed to fetch token information",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
