@@ -53,7 +53,8 @@ export default function TradeCalendar({
     return (
       <div
         className={cn(
-          "w-full h-full p-2",
+          "w-full h-full p-2 ring-1 ring-inset",
+          dayTrades.trades.length > 0 && "ring-white/20 bg-white/5",
           filter === "pnl"
             ? dayTrades.pnl > 0
               ? "bg-[rgb(var(--solana-green))/0.1]"
