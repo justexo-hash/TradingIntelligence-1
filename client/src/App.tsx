@@ -26,11 +26,15 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
             <div className="max-w-2xl">
               <h4 className="text-lg font-semibold mb-2">Privacy Policy</h4>
               <p className="text-sm text-muted-foreground">
-                We respect your privacy and do not collect or share any personal information or trading data. All your trades, journal entries, and insights are stored securely and are only accessible to you. We do not use your data for any purposes other than providing you with the trading journal functionality.
+                We respect your privacy and do not collect or share any personal
+                information or trading data. All your trades, journal entries,
+                and insights are stored securely and are only accessible to you.
+                We do not use your data for any purposes other than providing
+                you with the trading journal functionality.
               </p>
             </div>
             <a
-              href="https://twitter.com/justexo_sol"
+              href="https://twitter.com/mytradingpalsol"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgb(var(--solana-green))]/10 hover:bg-[rgb(var(--solana-green))]/20 transition-colors duration-300"
