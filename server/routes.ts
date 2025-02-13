@@ -141,9 +141,16 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/trades", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      // First fetch token info to get the name and symbol
+      const response = await fetch(`https://frontend-api.pump.fun/coins/${req.body.contractAddress}?sync=true`);
+      const tokenData = await response.json();
+
       const trade = insertTradeSchema.parse({
         ...req.body,
         userId: req.user!.id,
+        tokenName: tokenData.name || null,
+        tokenSymbol: tokenData.symbol || null,
+        tokenImage: tokenData.image_uri || null,
       });
 
       console.log('Creating trade:', trade);
