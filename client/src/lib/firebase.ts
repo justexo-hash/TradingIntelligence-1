@@ -5,7 +5,8 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut 
+  signOut,
+  onAuthStateChanged
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -17,20 +18,28 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-console.log('Initializing Firebase with config:', {
+console.log('Firebase Config:', {
   projectId: firebaseConfig.projectId,
   authDomain: firebaseConfig.authDomain,
-  currentHostname: window.location.hostname
+  currentHostname: window.location.hostname,
+  hasApiKey: !!firebaseConfig.apiKey,
+  hasAppId: !!firebaseConfig.appId
 });
 
 // Initialize Firebase with error handling
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization failed:', error);
+  throw error;
+}
+
 const auth = getAuth(app);
 
-// Initialize provider
+// Initialize provider with error handling
 const googleProvider = new GoogleAuthProvider();
-
-// Add scopes for additional permissions if needed
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
@@ -43,12 +52,16 @@ export const signInWithProvider = async (providerName: string) => {
     }
 
     const result = await signInWithPopup(auth, googleProvider);
-    console.log("Successfully signed in, requesting token...");
+    console.log("Successfully signed in with Google");
+
+    // Force token refresh and verify we can get a token
     const token = await result.user.getIdToken(true);
-    console.log("Token received:", token ? "Valid token" : "No token received");
+    console.log("Token obtained after sign in:", token ? "Valid token" : "No token");
+
     return result.user;
   } catch (error: any) {
-    console.error(`Error signing in with ${providerName}: `, error);
+    console.error(`Error signing in with ${providerName}:`, error);
+
     if (error.code === 'auth/unauthorized-domain') {
       throw new Error(`Please add ${window.location.hostname} to Firebase Console's Authorized Domains list.`);
     }
@@ -64,9 +77,11 @@ export const signInWithEmail = async (email: string, password: string) => {
   try {
     const result = await signInWithEmailAndPassword(auth, email, password);
     console.log("Successfully signed in with email");
+    const token = await result.user.getIdToken(true);
+    console.log("Token obtained after email sign in:", token ? "Valid token" : "No token");
     return result.user;
   } catch (error: any) {
-    console.error("Error signing in with email: ", error);
+    console.error("Error signing in with email:", error);
     if (error.code === 'auth/user-not-found') {
       throw new Error("No account exists with this email address.");
     }
@@ -81,9 +96,11 @@ export const registerWithEmail = async (email: string, password: string) => {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     console.log("Successfully registered with email");
+    const token = await result.user.getIdToken(true);
+    console.log("Token obtained after registration:", token ? "Valid token" : "No token");
     return result.user;
   } catch (error: any) {
-    console.error("Error registering with email: ", error);
+    console.error("Error registering with email:", error);
     if (error.code === 'auth/email-already-in-use') {
       throw new Error("An account already exists with this email address.");
     }
@@ -99,23 +116,30 @@ export const signOutUser = async () => {
     await signOut(auth);
     console.log("Successfully signed out");
   } catch (error) {
-    console.error("Error signing out: ", error);
+    console.error("Error signing out:", error);
     throw error;
   }
 };
 
-// Add token refresh and verification
-auth.onAuthStateChanged(async (user) => {
+// Add token refresh and verification with more detailed logging
+onAuthStateChanged(auth, async (user) => {
+  console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+
   if (user) {
-    console.log('Auth state changed: User is signed in');
     try {
       const token = await user.getIdToken(true);
-      console.log('Token refreshed:', token ? 'Valid token received' : 'No token received');
+      console.log('Token refresh result:', {
+        success: !!token,
+        timestamp: new Date().toISOString(),
+        hostname: window.location.hostname
+      });
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      console.error('Token refresh failed:', {
+        error,
+        timestamp: new Date().toISOString(),
+        hostname: window.location.hostname
+      });
     }
-  } else {
-    console.log('Auth state changed: User is signed out');
   }
 });
 

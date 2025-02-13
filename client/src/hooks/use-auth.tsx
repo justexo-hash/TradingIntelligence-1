@@ -22,14 +22,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('Setting up auth state listener');
+    console.log('Setting up auth state listener on:', window.location.hostname);
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       console.log('Auth state changed:', user ? 'User logged in' : 'No user');
       if (user) {
         try {
-          // Force token refresh on auth state change
           const token = await user.getIdToken(true);
-          console.log('Token refreshed on auth state change:', token ? 'Valid token' : 'No token');
+          console.log('Token refreshed on auth state change:', {
+            success: !!token,
+            uid: user.uid,
+            hostname: window.location.hostname
+          });
         } catch (error) {
           console.error('Failed to refresh token:', error);
         }
@@ -46,11 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (provider: string) => {
     try {
-      console.log(`Attempting to sign in with ${provider}...`);
+      console.log(`Attempting to sign in with ${provider} on ${window.location.hostname}`);
       const user = await signInWithProvider(provider);
       if (user) {
         console.log('Sign in successful, requesting fresh token');
-        await user.getIdToken(true); // Force token refresh after sign in
+        await user.getIdToken(true);
       }
       return user;
     } catch (error) {
@@ -68,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInEmail = async (email: string, password: string) => {
     try {
-      console.log('Attempting email sign in...');
+      console.log('Attempting email sign in on:', window.location.hostname);
       const user = await signInWithEmail(email, password);
       if (user) {
         console.log('Email sign in successful, requesting fresh token');
@@ -90,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string) => {
     try {
-      console.log('Attempting registration...');
+      console.log('Attempting registration on:', window.location.hostname);
       const user = await registerWithEmail(email, password);
       if (user) {
         console.log('Registration successful, requesting fresh token');
@@ -112,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      console.log('Attempting sign out...');
+      console.log('Attempting sign out on:', window.location.hostname);
       await signOutUser();
       console.log('Sign out successful');
     } catch (error) {
