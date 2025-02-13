@@ -13,7 +13,7 @@ import {
 
 // Initialize Firebase configuration
 const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-const isProd = import.meta.env.PROD === 'true' || import.meta.env.NODE_ENV === 'production';
+const isProd = import.meta.env.VITE_PROD || window.location.hostname === 'trademate.live';
 const currentHost = window.location.hostname;
 
 const firebaseConfig = {
@@ -33,7 +33,8 @@ console.log('Firebase Config:', {
   currentHost,
   hasApiKey: !!firebaseConfig.apiKey,
   hasAppId: !!firebaseConfig.appId,
-  environment: isProd ? 'production' : 'development'
+  environment: isProd ? 'production' : 'development',
+  isCustomDomain: currentHost === 'trademate.live'
 });
 
 // Initialize Firebase
@@ -43,7 +44,7 @@ const auth = getAuth(app);
 // Set persistence to LOCAL
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
-    console.log('Firebase persistence set to LOCAL');
+    console.log('Firebase persistence set to LOCAL on:', currentHost);
   })
   .catch((error) => {
     console.error('Error setting persistence:', error);
@@ -57,7 +58,11 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 // Sign in with provider (Google)
 export const signInWithProvider = async (providerName: string) => {
   try {
-    console.log(`Attempting to sign in with ${providerName} on ${window.location.hostname}`);
+    console.log(`Attempting to sign in with ${providerName} on ${currentHost}`, {
+      isProd,
+      authDomain: firebaseConfig.authDomain
+    });
+
     if (providerName.toLowerCase() !== 'google') {
       throw new Error('Only Google sign in is supported');
     }
@@ -66,19 +71,26 @@ export const signInWithProvider = async (providerName: string) => {
     console.log("Successfully signed in with Google");
 
     // Force token refresh and verify we can get a token
-    const token = await result.user.getIdToken(true);
+    const token = await result.user.getIdToken(isProd);
     console.log("Token obtained after sign in:", {
       success: !!token,
       uid: result.user.uid,
-      hostname: window.location.hostname
+      hostname: currentHost,
+      isProd,
+      tokenLength: token ? token.length : 0 //Added to handle potential null token
     });
 
     return result.user;
   } catch (error: any) {
-    console.error(`Error signing in with ${providerName}:`, error);
+    console.error(`Error signing in with ${providerName}:`, {
+      error,
+      host: currentHost,
+      isProd,
+      authDomain: firebaseConfig.authDomain
+    });
 
     if (error.code === 'auth/unauthorized-domain') {
-      throw new Error(`Please add ${window.location.hostname} to Firebase Console's Authorized Domains list.`);
+      throw new Error(`Please add ${currentHost} to Firebase Console's Authorized Domains list.`);
     }
     if (error.code === 'auth/configuration-not-found') {
       throw new Error("Firebase configuration error. Please check your Firebase setup and authorized domains.");

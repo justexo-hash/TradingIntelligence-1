@@ -6,10 +6,12 @@ import { storage } from "./storage";
 
 // Initialize Firebase Admin with service account
 try {
-  const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true';
+  const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true' || process.env.VITE_PROD === 'true';
   console.log('Initializing Firebase Admin:', {
     environment: isProd ? 'production' : 'development',
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL
   });
 
   initializeApp({
@@ -28,12 +30,13 @@ try {
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true';
+    const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true' || process.env.VITE_PROD === 'true';
     const isCustomDomain = req.headers.host === 'trademate.live';
 
     console.log('Auth middleware check:', {
       NODE_ENV: process.env.NODE_ENV,
       PROD: process.env.PROD,
+      VITE_PROD: process.env.VITE_PROD,
       isProd,
       host: req.headers.host,
       isCustomDomain,
@@ -44,7 +47,7 @@ export function setupAuth(app: Express) {
 
     // Only allow development mode bypass on non-production
     if (!authHeader?.startsWith('Bearer ')) {
-      if (!isProd) {
+      if (!isProd && !isCustomDomain) {
         console.log('Development mode: Using mock user');
         const mockUser = await storage.getUserByFirebaseId('dev-user');
         if (!mockUser) {
@@ -104,7 +107,9 @@ export function setupAuth(app: Express) {
       console.error('Firebase token verification failed:', {
         error,
         host: req.headers.host,
-        isCustomDomain
+        isCustomDomain,
+        errorCode: error.code,
+        errorMessage: error.message
       });
       return res.status(401).json({ 
         error: "Authentication failed",

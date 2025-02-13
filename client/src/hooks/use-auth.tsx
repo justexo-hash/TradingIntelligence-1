@@ -21,12 +21,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const currentHost = window.location.hostname;
-  const isDevelopment = process.env.NODE_ENV === 'development' || currentHost.includes('localhost');
+  const isDevelopment = !import.meta.env.PROD && !currentHost.includes('trademate.live');
 
   console.log('Auth environment:', {
-    NODE_ENV: process.env.NODE_ENV,
     isDevelopment,
-    currentHost
+    currentHost,
+    isCustomDomain: currentHost === 'trademate.live',
+    VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    hasApiKey: !!import.meta.env.VITE_FIREBASE_API_KEY
   });
 
   useEffect(() => {
