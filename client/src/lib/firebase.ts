@@ -2,9 +2,6 @@ import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
   GoogleAuthProvider, 
-  GithubAuthProvider,
-  TwitterAuthProvider,
-  FacebookAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -24,11 +21,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Initialize providers
+// Initialize provider
 const googleProvider = new GoogleAuthProvider();
-const githubProvider = new GithubAuthProvider();
-const twitterProvider = new TwitterAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
 
 // Add scopes for additional permissions if needed
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
@@ -38,25 +32,11 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 export const signInWithProvider = async (providerName: string) => {
   try {
     console.log(`Attempting to sign in with ${providerName}...`);
-    let provider;
-    switch (providerName.toLowerCase()) {
-      case 'google':
-        provider = googleProvider;
-        break;
-      case 'github':
-        provider = githubProvider;
-        break;
-      case 'twitter':
-        provider = twitterProvider;
-        break;
-      case 'facebook':
-        provider = facebookProvider;
-        break;
-      default:
-        throw new Error('Unsupported provider');
+    if (providerName.toLowerCase() !== 'google') {
+      throw new Error('Only Google sign in is supported');
     }
 
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, googleProvider);
     console.log("Successfully signed in");
     return result.user;
   } catch (error: any) {

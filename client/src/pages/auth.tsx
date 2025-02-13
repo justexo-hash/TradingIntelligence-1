@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
-import { SiGoogle, SiGithub, SiX, SiFacebook } from "react-icons/si";
+import { SiGoogle } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -144,45 +144,6 @@ export default function AuthPage() {
                 <SiGoogle className="h-4 w-4" />
               )}
               Sign in with Google
-            </Button>
-
-            <Button
-              onClick={() => handleSignIn('github')}
-              className="w-full flex items-center justify-center gap-2 bg-[#24292e] hover:bg-[#2f363d]"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <SiGithub className="h-4 w-4" />
-              )}
-              Sign in with GitHub
-            </Button>
-
-            <Button
-              onClick={() => handleSignIn('twitter')}
-              className="w-full flex items-center justify-center gap-2 bg-[#1DA1F2] hover:bg-[#1a91da]"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <SiX className="h-4 w-4" />
-              )}
-              Sign in with X (Twitter)
-            </Button>
-
-            <Button
-              onClick={() => handleSignIn('facebook')}
-              className="w-full flex items-center justify-center gap-2 bg-[#4267B2] hover:bg-[#365899]"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <SiFacebook className="h-4 w-4" />
-              )}
-              Sign in with Facebook
             </Button>
           </CardContent>
         </Card>
