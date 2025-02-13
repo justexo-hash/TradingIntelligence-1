@@ -9,6 +9,27 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+async function getAuthToken(forceRefresh = true): Promise<string | null> {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('No user logged in');
+      return null;
+    }
+
+    const token = await user.getIdToken(forceRefresh);
+    console.log('Token obtained:', {
+      success: !!token,
+      uid: user.uid,
+      host: window.location.hostname
+    });
+    return token;
+  } catch (error) {
+    console.error('Failed to get auth token:', error);
+    return null;
+  }
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -16,12 +37,11 @@ export async function apiRequest(
 ): Promise<Response> {
   try {
     console.log(`Making ${method} request to ${url} from ${window.location.hostname}`);
-    const token = await auth.currentUser?.getIdToken(true); // Force token refresh
-    console.log('Token status:', token ? 'Token obtained' : 'No token available');
+    const token = await getAuthToken(true);
 
     if (!token) {
-      console.error('No authentication token available - user might not be logged in');
-      throw new Error("No authentication token available");
+      console.error('No authentication token available');
+      throw new Error("Authentication required");
     }
 
     const headers: Record<string, string> = {
@@ -42,7 +62,7 @@ export async function apiRequest(
       headers,
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
-      cache: "no-store", // Prevent caching
+      cache: "no-store",
     });
 
     if (res.status === 401) {
@@ -52,6 +72,23 @@ export async function apiRequest(
         url: res.url,
         host: window.location.hostname
       });
+
+      // Try one more time with a forced token refresh
+      const newToken = await getAuthToken(true);
+      if (newToken) {
+        headers.Authorization = `Bearer ${newToken}`;
+        const retryRes = await fetch(url, {
+          method,
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (retryRes.ok) {
+          return retryRes;
+        }
+      }
     }
 
     await throwIfResNotOk(res);
@@ -63,6 +100,7 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
+
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
@@ -70,16 +108,14 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     try {
       console.log('Executing query:', queryKey[0], 'from', window.location.hostname);
-      const token = await auth.currentUser?.getIdToken(true); // Force token refresh
-      console.log('Query token status:', token ? 'Token obtained' : 'No token available');
+      const token = await getAuthToken(true);
 
       if (!token) {
         if (unauthorizedBehavior === "returnNull") {
           console.log('No token available, returning null as configured');
           return null;
         }
-        console.error('No authentication token available for query');
-        throw new Error("No authentication token available");
+        throw new Error("Authentication required");
       }
 
       const headers: Record<string, string> = {
@@ -105,8 +141,24 @@ export const getQueryFn: <T>(options: {
           url: res.url,
           host: window.location.hostname
         });
+
+        // Try one more time with a forced token refresh
+        const newToken = await getAuthToken(true);
+        if (newToken) {
+          headers.Authorization = `Bearer ${newToken}`;
+          const retryRes = await fetch(queryKey[0] as string, {
+            headers,
+            credentials: "include",
+            cache: "no-store",
+          });
+
+          if (retryRes.ok) {
+            return await retryRes.json();
+          }
+        }
+
         if (unauthorizedBehavior === "returnNull") {
-          console.log('Received 401, returning null as configured');
+          console.log('Authentication failed, returning null as configured');
           return null;
         }
       }
@@ -128,9 +180,8 @@ export const queryClient = new QueryClient({
       staleTime: 0,
       gcTime: 1000 * 60 * 5,
       retry: (failureCount, error) => {
-        // Don't retry on auth errors
         if (error instanceof Error && error.message.startsWith("401:")) {
-          console.log('Not retrying 401 error');
+          console.log('Not retrying auth error');
           return false;
         }
         console.log(`Retrying query (attempt ${failureCount + 1}/3)`);
