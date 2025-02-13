@@ -104,7 +104,14 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold mb-1">
-                  {getTokenDisplayName(trade)}
+                  <a
+                    href={`https://pump.fun/solana/${trade.contractAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[rgb(var(--solana-green))] transition-colors"
+                  >
+                    {getTokenDisplayName(trade)}
+                  </a>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {new Date(trade.date).toLocaleTimeString()}
