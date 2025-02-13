@@ -53,7 +53,7 @@ export const sharedTrades = pgTable("shared_trades", {
   tokenName: text("token_name"),
   tokenSymbol: text("token_symbol"),
   setup: text("setup").array(),
-  outcome: decimal("outcome"),
+  outcome: text("outcome"), // Changed to text
   analysis: text("analysis"),
   date: timestamp("date").notNull().defaultNow(),
   likes: integer("likes").default(0),

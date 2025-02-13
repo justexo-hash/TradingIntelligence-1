@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Journal from "@/pages/Journal";
 import Trades from "@/pages/Trades";
+import SharedTrades from "@/pages/SharedTrades";
 import Insights from "@/pages/Insights";
 import QuickGuide from "@/pages/QuickGuide";
 import AuthPage from "@/pages/auth";
@@ -75,6 +76,14 @@ function Router() {
         component={() => (
           <ProtectedLayout>
             <Trades />
+          </ProtectedLayout>
+        )}
+      />
+      <ProtectedRoute
+        path="/shared-trades"
+        component={() => (
+          <ProtectedLayout>
+            <SharedTrades />
           </ProtectedLayout>
         )}
       />

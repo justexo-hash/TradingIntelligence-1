@@ -298,7 +298,7 @@ export function registerRoutes(app: Express) {
         tokenName: trade.tokenName,
         tokenSymbol: trade.tokenSymbol,
         setup: trade.setup,
-        outcome: Number(trade.sellAmount) - Number(trade.buyAmount),
+        outcome: (Number(trade.sellAmount) - Number(trade.buyAmount)).toString(),
         analysis: req.body.analysis,
       });
 

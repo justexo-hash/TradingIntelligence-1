@@ -8,12 +8,14 @@ import {
   PieChart,
   LogOut,
   HelpCircle,
+  Users,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Daily Journal", href: "/journal", icon: BookText },
   { name: "Trades", href: "/trades", icon: LineChart },
+  { name: "Community", href: "/shared-trades", icon: Users },
   { name: "Insights", href: "/insights", icon: PieChart },
   { name: "Quick Guide", href: "/guide", icon: HelpCircle },
 ];
