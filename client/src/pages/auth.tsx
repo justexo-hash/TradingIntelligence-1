@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus, LogIn } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,9 +66,14 @@ export default function AuthPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="flex flex-col items-center">
             <img src="/logo.png" alt="Logo" className="h-13 w-70 mb-2" />
-            <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {isRegistering ? "Create an Account" : "Welcome Back"}
+            </CardTitle>
             <CardDescription>
-              Your personal trading journal and performance analyzer
+              {isRegistering
+                ? "Join our community of traders and start tracking your performance"
+                : "Sign in to access your trading journal and insights"
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
@@ -100,20 +105,33 @@ export default function AuthPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className={`w-full ${isRegistering ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isRegistering ? (
-                    "Register"
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Create Account
+                    </>
                   ) : (
-                    "Sign in"
+                    <>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Sign in
+                    </>
                   )}
                 </Button>
                 <Button
                   type="button"
                   variant="link"
-                  className="w-full"
-                  onClick={() => setIsRegistering(!isRegistering)}
+                  className="w-full text-muted-foreground"
+                  onClick={() => {
+                    setIsRegistering(!isRegistering);
+                    form.reset();
+                  }}
                 >
                   {isRegistering
                     ? "Already have an account? Sign in"
