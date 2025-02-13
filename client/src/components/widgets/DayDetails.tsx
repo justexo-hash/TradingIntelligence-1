@@ -105,7 +105,7 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
               <div>
                 <h3 className="text-lg font-semibold mb-1">
                   <a
-                    href={`https://pump.fun/solana/${trade.contractAddress}`}
+                    href={`https://pump.fun/token/${trade.contractAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-[rgb(var(--solana-green))] transition-colors"
