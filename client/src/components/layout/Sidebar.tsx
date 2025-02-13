@@ -43,35 +43,29 @@ export default function Sidebar() {
                   : "text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))]"
               )}
             >
+              <div className="flex items-center w-full">
+                <div className="min-w-[20px] flex items-center justify-center">
+                  <item.icon
+                    className={cn(
+                      "h-5 w-5 transition-colors duration-300",
+                      isActive
+                        ? "text-[rgb(var(--trade-green))]"
+                        : "text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60"
+                    )}
+                  />
+                </div>
+                <span className="ml-3 opacity-0 group-hover:opacity-100 transition-[opacity] duration-300 whitespace-nowrap">
+                  {item.name}
+                </span>
+              </div>
               <div
                 className={cn(
                   "absolute inset-y-0 left-0 w-1 rounded-full transition-colors duration-300",
                   isActive
                     ? "bg-[rgb(var(--trade-green))]"
-                    : "bg-transparent group-hover/item:bg-[rgb(var(--trade-green))]/30"
+                    : "bg-transparent group-hover:bg-[rgb(var(--trade-green))]/30"
                 )}
               />
-
-              <div className="flex items-center w-full">
-                <item.icon
-                  className={cn(
-                    "h-5 w-5 transition-colors duration-300",
-                    isActive
-                      ? "text-[rgb(var(--trade-green))]"
-                      : "text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60"
-                  )}
-                />
-
-                <span className="ml-3 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-300 transform translate-x-1 group-hover:translate-x-0">
-                  {item.name}
-                  <span
-                    className={cn(
-                      "absolute -bottom-1 left-0 h-[2px] w-0 bg-[rgb(var(--trade-green))] transition-[width] duration-300",
-                      isActive || "group-hover/item:w-full"
-                    )}
-                  />
-                </span>
-              </div>
             </Link>
           );
         })}
@@ -83,8 +77,10 @@ export default function Sidebar() {
           className="relative flex h-10 w-full items-center px-3 text-sm font-medium text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))] rounded-xl transition-colors duration-300 hover:bg-[rgb(var(--trade-green))]/10"
         >
           <div className="flex items-center w-full">
-            <LogOut className="h-5 w-5 text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60 transition-colors duration-300" />
-            <span className="ml-3 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-300 transform translate-x-1 group-hover:translate-x-0">
+            <div className="min-w-[20px] flex items-center justify-center">
+              <LogOut className="h-5 w-5 text-[rgb(var(--trade-font))]/40 group-hover:text-[rgb(var(--trade-font))]/60 transition-colors duration-300" />
+            </div>
+            <span className="ml-3 opacity-0 group-hover:opacity-100 transition-[opacity] duration-300 whitespace-nowrap">
               Sign Out
             </span>
           </div>
