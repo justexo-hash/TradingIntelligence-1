@@ -8,19 +8,22 @@ interface StatsProps {
 }
 
 export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
-  const stats = trades?.reduce(
-    (acc, trade) => {
-      const pnl = Number(trade.sellAmount || 0) - Number(trade.buyAmount || 0);
-      return {
-        totalPnl: acc.totalPnl + pnl,
-        totalTrades: acc.totalTrades + 1,
-        winningTrades: acc.winningTrades + (pnl > 0 ? 1 : 0),
-      };
-    },
-    { totalPnl: 0, totalTrades: 0, winningTrades: 0 }
-  );
+  // Initialize default stats
+  const defaultStats = { totalPnl: 0, totalTrades: 0, winningTrades: 0 };
 
-  const winRate = stats.totalTrades
+  // Calculate stats only if we have trades
+  const stats = trades && trades.length > 0 
+    ? trades.reduce((acc, trade) => {
+        const pnl = Number(trade.sellAmount || 0) - Number(trade.buyAmount || 0);
+        return {
+          totalPnl: acc.totalPnl + pnl,
+          totalTrades: acc.totalTrades + 1,
+          winningTrades: acc.winningTrades + (pnl > 0 ? 1 : 0),
+        };
+      }, defaultStats)
+    : defaultStats;
+
+  const winRate = stats.totalTrades > 0
     ? ((stats.winningTrades / stats.totalTrades) * 100).toFixed(1)
     : "0.0";
 
