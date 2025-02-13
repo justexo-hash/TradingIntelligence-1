@@ -23,12 +23,12 @@ export default function Sidebar() {
   const { logoutMutation } = useAuth();
 
   return (
-    <div className="hidden md:flex h-full w-72 flex-col bg-gradient-to-b from-black/95 via-black/90 to-black/95 backdrop-blur-xl border-r border-[rgb(var(--solana-green))]/5">
-      <div className="flex h-16 items-center px-8 border-b border-[rgb(var(--solana-green))]/5">
-        <img src="/logo.png" alt="Logo" className="h-30" />
+    <div className="group hidden md:flex h-full w-20 hover:w-72 transition-all duration-300 flex-col bg-[rgb(var(--trade-beige))] border-r border-[rgb(var(--trade-orange))]/20">
+      <div className="flex h-16 items-center px-4 hover:px-8 transition-all duration-300 border-b border-[rgb(var(--trade-orange))]/20">
+        <img src="/logo.png" alt="Logo" className="h-8" />
       </div>
 
-      <nav className="flex-1 space-y-2 px-4 py-8">
+      <nav className="flex-1 space-y-2 p-2 transition-all duration-300 group-hover:p-4">
         {navigation.map((item) => {
           const isActive = location === item.href;
           return (
@@ -36,37 +36,37 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group relative flex items-center px-6 py-4 text-sm font-medium rounded-2xl transition-all duration-300 overflow-hidden",
-                "hover:bg-gradient-to-r hover:from-[rgb(var(--solana-green))]/10 hover:to-transparent",
+                "group/item relative flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-300",
+                "hover:bg-[rgb(var(--trade-orange))]/10",
                 isActive
-                  ? "bg-gradient-to-r from-[rgb(var(--solana-green))]/20 to-transparent text-[rgb(var(--solana-green))]"
-                  : "text-foreground/60 hover:text-foreground",
+                  ? "bg-[rgb(var(--trade-orange))]/20 text-[rgb(var(--trade-orange))]"
+                  : "text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))]"
               )}
             >
               <div
                 className={cn(
                   "absolute inset-y-0 left-0 w-1 rounded-full transition-all duration-300",
                   isActive
-                    ? "bg-[rgb(var(--solana-green))]"
-                    : "bg-transparent group-hover:bg-[rgb(var(--solana-green))]/30",
+                    ? "bg-[rgb(var(--trade-orange))]"
+                    : "bg-transparent group-hover/item:bg-[rgb(var(--trade-orange))]/30"
                 )}
               />
 
               <item.icon
                 className={cn(
-                  "mr-4 h-5 w-5 transition-all duration-300",
+                  "h-5 w-5 transition-all duration-300",
                   isActive
-                    ? "text-[rgb(var(--solana-green))]"
-                    : "text-foreground/40 group-hover:text-foreground/60",
+                    ? "text-[rgb(var(--trade-orange))]"
+                    : "text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60"
                 )}
               />
 
-              <span className="relative">
+              <span className="ml-3 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
                 {item.name}
                 <span
                   className={cn(
-                    "absolute -bottom-1 left-0 h-[2px] w-0 bg-[rgb(var(--solana-green))] transition-all duration-300",
-                    isActive || "group-hover:w-full",
+                    "absolute -bottom-1 left-0 h-[2px] w-0 bg-[rgb(var(--trade-orange))] transition-all duration-300",
+                    isActive || "group-hover/item:w-full"
                   )}
                 />
               </span>
@@ -75,13 +75,15 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-[rgb(var(--solana-green))]/5 p-4">
+      <div className="border-t border-[rgb(var(--trade-orange))]/20 p-2 group-hover:p-4 transition-all duration-300">
         <button
           onClick={() => logoutMutation.mutate()}
-          className="group flex w-full items-center px-6 py-4 text-sm font-medium text-foreground/60 hover:text-foreground rounded-2xl transition-all duration-300 hover:bg-gradient-to-r hover:from-[rgb(var(--solana-green))]/10 hover:to-transparent"
+          className="group/item flex w-full items-center px-3 py-3 text-sm font-medium text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))] rounded-xl transition-all duration-300 hover:bg-[rgb(var(--trade-orange))]/10"
         >
-          <LogOut className="mr-4 h-5 w-5 text-foreground/40 group-hover:text-foreground/60 transition-colors duration-300" />
-          Sign Out
+          <LogOut className="h-5 w-5 text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60 transition-colors duration-300" />
+          <span className="ml-3 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
+            Sign Out
+          </span>
         </button>
       </div>
     </div>
