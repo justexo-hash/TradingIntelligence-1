@@ -21,40 +21,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const currentHost = window.location.hostname;
+  const isDevelopment = process.env.NODE_ENV === 'development' || currentHost.includes('localhost');
+
+  console.log('Auth environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    isDevelopment,
+    currentHost
+  });
 
   useEffect(() => {
     console.log('Setting up auth state listener on:', currentHost);
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      console.log('Auth state changed on', currentHost, ':', user ? 'User logged in' : 'No user');
-      setUser(user);
+      console.log('Auth state changed:', {
+        host: currentHost,
+        isAuthenticated: !!user,
+        environment: isDevelopment ? 'development' : 'production'
+      });
 
       if (user) {
         try {
-          // Get fresh token on auth state change
-          const token = await user.getIdToken(true);
-          console.log('Token refreshed on auth state change:', {
+          // Force token refresh on production
+          const token = await user.getIdToken(!isDevelopment);
+          console.log('Token refresh status:', {
             success: !!token,
             uid: user.uid,
             email: user.email,
-            hostname: currentHost
+            host: currentHost,
+            environment: isDevelopment ? 'development' : 'production'
           });
         } catch (error) {
-          console.error('Failed to refresh token:', {
+          console.error('Token refresh failed:', {
             error,
-            uid: user.uid,
-            hostname: currentHost
+            host: currentHost,
+            environment: isDevelopment ? 'development' : 'production'
           });
-          // Show error to user
+
+          // Show error to user and force re-login
           toast({
             title: "Authentication Error",
-            description: "Please try signing in again",
+            description: "Please sign in again",
             variant: "destructive",
           });
-          // Sign out on token refresh failure
           await signOut();
+          return;
         }
       }
 
+      setUser(user);
       setIsLoading(false);
     });
 
@@ -62,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Cleaning up auth state listener on:', currentHost);
       unsubscribe();
     };
-  }, [currentHost, toast]);
+  }, [currentHost, toast, isDevelopment]);
 
   const signIn = async (provider: string) => {
     try {
@@ -72,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return user;
     } catch (error) {
       const e = error as Error;
-      console.error('Sign in error:', e);
+      console.error('Sign in error:', {
+        error: e,
+        host: currentHost,
+        environment: isDevelopment ? 'development' : 'production'
+      });
       setError(e);
       toast({
         title: "Sign in failed",

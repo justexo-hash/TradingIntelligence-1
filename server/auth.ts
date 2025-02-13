@@ -22,18 +22,19 @@ try {
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    console.log('Auth middleware - Request details:', {
-      origin: req.headers.origin,
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    console.log('Auth middleware environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      isDevelopment,
       host: req.headers.host,
-      hasAuth: !!req.headers.authorization,
-      isDev: process.env.NODE_ENV === 'development'
+      hasAuth: !!req.headers.authorization
     });
 
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
       // Development mode handling
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevelopment) {
         console.log('Development mode: Using mock user');
         const mockUser = await storage.getUserByFirebaseId('dev-user');
         if (!mockUser) {
@@ -59,12 +60,13 @@ export function setupAuth(app: Express) {
 
     try {
       const token = authHeader.split('Bearer ')[1];
-      console.log('Verifying Firebase token...');
+      console.log('Verifying Firebase token in environment:', isDevelopment ? 'development' : 'production');
 
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
-        email: decodedToken.email
+        email: decodedToken.email,
+        environment: isDevelopment ? 'development' : 'production'
       });
 
       // Get or create user in our database
