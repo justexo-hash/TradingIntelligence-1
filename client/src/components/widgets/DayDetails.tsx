@@ -65,17 +65,17 @@ export default function DayDetails({ date, trades, onClose }: DayDetailsProps) {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))/0.1]">
+        <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))]/0.1">
           <p className="text-sm text-muted-foreground">Total Trades</p>
           <p className="text-2xl font-bold text-gradient">{totalTrades}</p>
         </div>
-        <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))/0.1]">
+        <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))]/0.1">
           <p className="text-sm text-muted-foreground">Win Rate</p>
           <p className="text-2xl font-bold text-gradient">
             {totalTrades ? ((profitableTrades / totalTrades) * 100).toFixed(1) : "0"}%
           </p>
         </div>
-        <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))/0.1]">
+        <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))]/0.1">
           <p className="text-sm text-muted-foreground">Net P&L</p>
           <p className="text-2xl font-bold text-gradient">{totalPnL.toFixed(4)} SOL</p>
         </div>
@@ -88,13 +88,7 @@ export default function DayDetails({ date, trades, onClose }: DayDetailsProps) {
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-semibold mb-2">
-                  {trade.tokenName ? (
-                    <>
-                      {trade.tokenName} {trade.tokenSymbol && `(${trade.tokenSymbol})`}
-                    </>
-                  ) : (
-                    trade.contractAddress
-                  )}
+                  {trade.tokenName || trade.tokenSymbol || trade.contractAddress}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {new Date(trade.date).toLocaleTimeString()}

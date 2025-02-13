@@ -44,7 +44,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Token information endpoint with better error handling
+  // Update the token information endpoint
   app.get("/api/token/:contractAddress", async (req, res) => {
     try {
       const { contractAddress } = req.params;
@@ -112,7 +112,7 @@ export function registerRoutes(app: Express) {
         symbol: data.symbol,
         description: data.description,
         image: data.image_uri,
-        marketCap: data.market_cap,
+        marketCap: data.usd_market_cap || data.market_cap, // Prioritize USD market cap
         totalSupply: data.total_supply,
       };
 
