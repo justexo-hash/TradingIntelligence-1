@@ -22,7 +22,7 @@ const navigation = [
 
 export default function Sidebar() {
   const [location] = useLocation();
-  const { logoutMutation } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <div className="group hidden md:flex h-full w-20 hover:w-52 transition-[width] duration-300 ease-in-out transform will-change-[width] flex-col bg-[rgb(var(--trade-bg))] border-r border-[rgb(var(--trade-green))]/20">
@@ -79,7 +79,7 @@ export default function Sidebar() {
 
       <div className="border-t border-[rgb(var(--trade-green))]/20 p-2 group-hover:p-4 transition-[padding] duration-300">
         <button
-          onClick={() => logoutMutation.mutate()}
+          onClick={() => signOut()}
           className="relative flex h-10 w-full items-center px-3 text-sm font-medium text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))] rounded-xl transition-colors duration-300 hover:bg-[rgb(var(--trade-green))]/10"
         >
           <div className="flex items-center w-full">
