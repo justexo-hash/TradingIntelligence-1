@@ -171,7 +171,6 @@ export function registerRoutes(app: Express) {
   });
 
 
-
   app.patch("/api/trades/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const tradeId = Number(req.params.id);
