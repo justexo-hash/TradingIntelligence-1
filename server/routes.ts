@@ -6,6 +6,8 @@ import { generateTradeInsights } from "./ai";
 import { z } from "zod";
 import { setupAuth } from "./auth";
 import fetch from "node-fetch";
+import { AuthenticatedRequest } from "./types";
+import { Response, NextFunction } from "express";
 
 const generateInsightsSchema = z.object({
   userId: z.number(),
@@ -16,7 +18,7 @@ export function registerRoutes(app: Express) {
   setupAuth(app);
 
   // Authentication middleware for API routes
-  const requireAuth = (req: any, res: any, next: any) => {
+  const requireAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -24,7 +26,7 @@ export function registerRoutes(app: Express) {
   };
 
   // Add the balance update endpoint
-  app.patch("/api/user/balance", requireAuth, async (req, res) => {
+  app.patch("/api/user/balance", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { balance } = req.body;
       if (!balance || isNaN(Number(balance))) {
@@ -126,7 +128,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Trades
-  app.post("/api/trades", requireAuth, async (req, res) => {
+  app.post("/api/trades", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const trade = insertTradeSchema.parse({
         ...req.body,
@@ -137,13 +139,11 @@ export function registerRoutes(app: Express) {
       const result = await storage.createTrade(trade);
       console.log('Trade created:', result);
 
-      // Calculate the impact on user's balance
       const tradePnL = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
       const user = await storage.getUser(req.user!.id);
       console.log('Current user state:', user);
 
       if (user) {
-        // Update the balance by adding the PnL from the trade
         const currentBalance = Number(user.accountBalance || 0);
         const newBalance = (currentBalance + tradePnL).toFixed(4);
         console.log('Balance calculation:', { currentBalance, tradePnL, newBalance });
@@ -160,10 +160,9 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/trades/:userId", requireAuth, async (req, res) => {
+  app.get("/api/trades/:userId", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = Number(req.params.userId);
-      // Only allow users to access their own trades
       if (userId !== req.user!.id) {
         return res.status(403).json({ error: "Forbidden" });
       }
@@ -175,7 +174,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Add the new PATCH endpoint for updating trades
-  app.patch("/api/trades/:id", requireAuth, async (req, res) => {
+  app.patch("/api/trades/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const tradeId = Number(req.params.id);
       const trade = await storage.getTrade(tradeId);
@@ -198,7 +197,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Add the new DELETE endpoint for trades
-  app.delete("/api/trades/:id", requireAuth, async (req, res) => {
+  app.delete("/api/trades/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const tradeId = Number(req.params.id);
       const trade = await storage.getTrade(tradeId);
@@ -217,7 +216,7 @@ export function registerRoutes(app: Express) {
 
 
   // Journals
-  app.post("/api/journals", requireAuth, async (req, res) => {
+  app.post("/api/journals", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const journal = insertJournalSchema.parse({
         ...req.body,
@@ -230,7 +229,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/journals/:userId", requireAuth, async (req, res) => {
+  app.get("/api/journals/:userId", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = Number(req.params.userId);
       // Only allow users to access their own journals
@@ -245,7 +244,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Insights
-  app.post("/api/insights/generate", requireAuth, async (req, res) => {
+  app.post("/api/insights/generate", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { userId } = generateInsightsSchema.parse(req.body);
       // Only allow users to generate insights for their own trades
@@ -270,7 +269,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/insights/:userId", requireAuth, async (req, res) => {
+  app.get("/api/insights/:userId", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = Number(req.params.userId);
       // Only allow users to access their own insights
@@ -285,7 +284,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Shared Trades
-  app.post("/api/shared-trades", requireAuth, async (req, res) => {
+  app.post("/api/shared-trades", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const trade = await storage.getTrade(req.body.tradeId);
       if (!trade || trade.userId !== req.user!.id) {
@@ -329,7 +328,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/shared-trades/:id/like", requireAuth, async (req, res) => {
+  app.post("/api/shared-trades/:id/like", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const trade = await storage.getSharedTrade(Number(req.params.id));
       if (!trade) {
@@ -348,7 +347,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/shared-trades/:id/comment", requireAuth, async (req, res) => {
+  app.post("/api/shared-trades/:id/comment", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { content } = req.body;
       if (!content) {
