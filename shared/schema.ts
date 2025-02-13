@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, decimal, timestamp, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, decimal, timestamp, boolean, json, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -53,12 +53,12 @@ export const sharedTrades = pgTable("shared_trades", {
   tokenName: text("token_name"),
   tokenSymbol: text("token_symbol"),
   setup: text("setup").array(),
-  outcome: text("outcome"),
+  outcome: decimal("outcome"),  // Keep as decimal to maintain data
   analysis: text("analysis"),
   date: timestamp("date").notNull().defaultNow(),
   likes: integer("likes").default(0),
   likedBy: integer("liked_by").array().default([]),
-  comments: json("comments").default([]),
+  comments: jsonb("comments").default([]),  // Keep as jsonb
 });
 
 export const achievements = pgTable("achievements", {
