@@ -11,7 +11,8 @@ try {
     isProduction,
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL
+    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+    customDomain: isProduction ? 'trademate.live' : undefined
   });
 
   initializeApp({
@@ -34,7 +35,8 @@ export function setupAuth(app: Express) {
     console.log('Auth middleware check:', {
       host: req.headers.host,
       isProduction,
-      hasAuth: !!req.headers.authorization
+      hasAuth: !!req.headers.authorization,
+      customDomain: isProduction ? 'trademate.live' : undefined
     });
 
     const authHeader = req.headers.authorization;
@@ -69,14 +71,16 @@ export function setupAuth(app: Express) {
       console.log('Verifying Firebase token:', {
         host: req.headers.host,
         isProduction,
-        tokenLength: token.length
+        tokenLength: token.length,
+        customDomain: isProduction ? 'trademate.live' : undefined
       });
 
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        host: req.headers.host
+        host: req.headers.host,
+        isProduction
       });
 
       let user = await storage.getUserByFirebaseId(decodedToken.uid);
@@ -88,7 +92,7 @@ export function setupAuth(app: Express) {
           firebaseId: decodedToken.uid,
           email: decodedToken.email || '',
           displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-          photoURL: decodedToken.picture || '',
+          photoURL: decoded.picture || '',
         });
         console.log('New user created:', { id: user.id, email: user.email });
       }
@@ -101,7 +105,8 @@ export function setupAuth(app: Express) {
         host: req.headers.host,
         isProduction,
         errorCode: error.code,
-        errorMessage: error.message
+        errorMessage: error.message,
+        customDomain: isProduction ? 'trademate.live' : undefined
       });
       return res.status(401).json({ 
         error: "Authentication failed",
