@@ -1,114 +1,87 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
+import { auth as adminAuth } from "firebase-admin";
 import { Express } from "express";
-import session from "express-session";
-import bcrypt from "bcrypt";
+import { getAuth } from "firebase-admin/auth";
+import { initializeApp, cert } from "firebase-admin/app";
 import { storage } from "./storage";
-import { type User } from "@shared/schema";
 
-declare global {
-  namespace Express {
-    interface User extends User {}
-  }
-}
-
-async function hashPassword(password: string) {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  return bcrypt.compare(supplied, stored);
+// Initialize Firebase Admin with service account
+try {
+  initializeApp({
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    credential: cert({
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+      clientEmail: `${process.env.VITE_FIREBASE_PROJECT_ID}@appspot.gserviceaccount.com`,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+  console.log('Firebase Admin initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase Admin:', error);
 }
 
 export function setupAuth(app: Express) {
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.REPL_ID!,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    },
-  };
-
-  if (app.get("env") === "production") {
-    app.set("trust proxy", 1);
-    sessionSettings.cookie!.secure = true;
-  }
-
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false, { message: "Invalid username or password" });
-        }
-        return done(null, user);
-      } catch (err) {
-        return done(err);
+  // Authentication middleware for API routes
+  app.use(async (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.log('No token provided in request headers');
+      if (process.env.NODE_ENV === 'development') {
+        // In development, allow requests without authentication for testing
+        console.log('Development mode: Allowing request without authentication');
+        return next();
       }
-    }),
-  );
-
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (err) {
-      done(err);
+      return res.status(401).json({ error: "No token provided" });
     }
+
+    try {
+      const token = authHeader.split('Bearer ')[1];
+      console.log('Verifying token...');
+      const decodedToken = await getAuth().verifyIdToken(token);
+      console.log('Token verified successfully for user:', decodedToken.uid);
+
+      // Get or create user in our database
+      let user = await storage.getUserByFirebaseId(decodedToken.uid);
+      if (!user) {
+        console.log('Creating new user for Firebase UID:', decodedToken.uid);
+        user = await storage.createUser({
+          firebaseId: decodedToken.uid,
+          email: decodedToken.email || '',
+          displayName: decodedToken.name || '',
+          photoURL: decodedToken.picture || '',
+        });
+        console.log('New user created:', user);
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error('Error verifying Firebase token:', error);
+      return res.status(401).json({ error: "Invalid token" });
+    }
+  });
+
+  // Get current user endpoint
+  app.get("/api/user", async (req: any, res: any) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    res.json(req.user);
   });
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
+      const existingUser = await storage.getUserByFirebaseId(req.body.firebaseId);
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "User already exists" });
       }
 
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
       });
 
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
+      res.status(201).json(user);
     } catch (error) {
       next(error);
     }
-  });
-
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: User | false, info: any) => {
-      if (err) return next(err);
-      if (!user) {
-        return res.status(401).json({ message: info?.message || "Authentication failed" });
-      }
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.json(user);
-      });
-    })(req, res, next);
-  });
-
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
-    });
-  });
-
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    res.json(req.user);
   });
 }

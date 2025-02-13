@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { auth } from "./firebase";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,9 +13,15 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const token = await auth.currentUser?.getIdToken();
+  const headers: Record<string, string> = {
+    ...(data ? { "Content-Type": "application/json" } : {}),
+    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+  };
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
     cache: "no-store", // Prevent caching
@@ -30,7 +37,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const token = await auth.currentUser?.getIdToken();
+    const headers: Record<string, string> = {
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    };
+
     const res = await fetch(queryKey[0] as string, {
+      headers,
       credentials: "include",
       cache: "no-store", // Prevent caching
     });
@@ -50,7 +63,7 @@ export const queryClient = new QueryClient({
       refetchInterval: 0,
       refetchOnWindowFocus: true,
       staleTime: 0, // Data is considered stale immediately
-      cacheTime: 1000 * 60 * 5, // Cache for 5 minutes
+      gcTime: 1000 * 60 * 5, // Cache for 5 minutes
       retry: false,
     },
     mutations: {

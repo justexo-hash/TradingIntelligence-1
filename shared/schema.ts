@@ -2,11 +2,13 @@ import { pgTable, text, serial, integer, decimal, timestamp, boolean, json, json
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Define all tables first
+// Update users table to include Firebase fields
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  firebaseId: text("firebase_id").notNull().unique(),
+  email: text("email").notNull(),
+  displayName: text("display_name").notNull(),
+  photoURL: text("photo_url"),
   accountBalance: decimal("account_balance").notNull().default("0"),
   experience: integer("experience").notNull().default(0),
   bio: text("bio"),
@@ -92,13 +94,16 @@ export const tradeReviews = pgTable("trade_reviews", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Define insert schemas
+// Update insert schema for users
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+  firebaseId: true,
+  email: true,
+  displayName: true,
+  photoURL: true,
 }).extend({
-  username: z.string().min(3, "Username must be at least 3 characters").max(50, "Username must be less than 50 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password must be less than 100 characters"),
+  firebaseId: z.string().min(1, "firebaseId is required"),
+  email: z.string().email("Invalid email address"),
+  displayName: z.string().min(1, "displayName is required"),
 });
 
 export const insertTradeSchema = createInsertSchema(trades).omit({
@@ -142,7 +147,7 @@ export const insertTradeReviewSchema = createInsertSchema(tradeReviews).omit({
   helpful: true,
 });
 
-// Define types
+// Update types
 export type User = typeof users.$inferSelect;
 export type Trade = typeof trades.$inferSelect;
 export type Journal = typeof journals.$inferSelect;
