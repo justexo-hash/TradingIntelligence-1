@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -75,8 +75,8 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   const { data: tokenInfo, isLoading: isLoadingToken, error: tokenError } = useQuery({
     queryKey: [`/api/token/${contractAddress}`],
     enabled: !!contractAddress && contractAddress.length > 0,
-    retry: 1, 
-    staleTime: 5 * 60 * 1000, 
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
   const form = useForm<InsertTrade>({
