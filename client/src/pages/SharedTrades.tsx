@@ -61,7 +61,7 @@ export default function SharedTrades() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Community Trades</h1>
+        <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">Community Trades</h1>
       </div>
 
       <ScrollArea className="h-[calc(100vh-10rem)]">

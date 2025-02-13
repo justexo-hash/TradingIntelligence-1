@@ -70,7 +70,7 @@ export default function Insights() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Insights</h1>
+        <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">Insights</h1>
         <Button
           onClick={() => generateMutation.mutate()}
           disabled={generateMutation.isPending || !user}
