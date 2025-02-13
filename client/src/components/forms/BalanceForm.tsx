@@ -31,7 +31,9 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
       return updatedUser;
     },
     onSuccess: () => {
+      // Invalidate and refetch user data to update the balance display
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
       toast({
         title: "Success",
         description: "Account balance updated successfully.",

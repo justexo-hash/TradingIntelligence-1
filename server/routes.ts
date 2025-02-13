@@ -25,7 +25,7 @@ export function registerRoutes(app: Express) {
     next();
   };
 
-  // Add the balance update endpoint
+  // Update balance endpoint
   app.patch("/api/user/balance", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { balance } = req.body;
@@ -148,6 +148,7 @@ export function registerRoutes(app: Express) {
       const result = await storage.createTrade(trade);
       console.log('Trade created:', result);
 
+      // Update user balance based on trade P&L
       const tradePnL = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
       const user = await storage.getUser(req.user!.id);
       console.log('Current user state:', user);
@@ -168,6 +169,7 @@ export function registerRoutes(app: Express) {
       res.status(400).json({ error: "Invalid trade data" });
     }
   });
+
 
 
   app.patch("/api/trades/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {

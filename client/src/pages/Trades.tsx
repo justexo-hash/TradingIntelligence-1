@@ -56,7 +56,7 @@ export default function Trades() {
     },
   });
 
-  const { data: trades } = useQuery<Trade[]>({
+  const { data: trades, refetch: refetchTrades } = useQuery<Trade[]>({
     queryKey: ["/api/trades"],
     enabled: !!user,
   });
@@ -67,6 +67,7 @@ export default function Trades() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] }); // Also refresh user data for balance
       toast({
         title: "Success",
         description: "Trade deleted successfully.",
@@ -87,6 +88,7 @@ export default function Trades() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] }); // Refresh user data for experience
       toast({
         title: "Success",
         description: "Trade shared successfully. You earned 10 experience points!",
