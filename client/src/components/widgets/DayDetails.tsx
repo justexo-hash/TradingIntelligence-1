@@ -104,14 +104,13 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold mb-1">
-                  <a
-                    href={`https://pump.fun/token/${trade.contractAddress}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-[rgb(var(--solana-green))] transition-colors"
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto font-semibold text-lg hover:text-[rgb(var(--solana-green))]"
+                    onClick={() => window.open(`https://pump.fun/token/${trade.contractAddress}`, '_blank')}
                   >
                     {getTokenDisplayName(trade)}
-                  </a>
+                  </Button>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {new Date(trade.date).toLocaleTimeString()}
