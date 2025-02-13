@@ -38,21 +38,21 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
 
       const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
       if (!response.ok) {
+        // If the update fails, rollback the optimistic update
+        if (currentUser) {
+          queryClient.setQueryData(["/api/user"], currentUser);
+        }
         const error = await response.json();
         throw new Error(error.message || "Failed to update balance");
       }
-      const updatedUser = await response.json();
-      console.log("Server response:", updatedUser);
-      return updatedUser;
+      return await response.json();
     },
     onSuccess: (updatedUser) => {
-      // Update all affected queries
+      // Force refetch of all relevant queries
       queryClient.setQueryData(["/api/user"], updatedUser);
+      // Invalidate and refetch related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-
-      // Force an immediate refetch of queries
-      queryClient.refetchQueries({ queryKey: ["/api/user"] });
-      queryClient.refetchQueries({ queryKey: ["/api/trades"] });
 
       toast({
         title: "Success",

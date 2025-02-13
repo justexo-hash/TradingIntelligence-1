@@ -78,11 +78,7 @@ export default function Dashboard() {
           </Select>
         </div>
 
-        <Stats 
-          key={user?.accountBalance} 
-          trades={trades} 
-          accountBalance={user?.accountBalance || "0"} 
-        />
+        <Stats trades={trades} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
           <Card className="flex-1 overflow-hidden border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg p-6 shadow-lg">
@@ -97,7 +93,7 @@ export default function Dashboard() {
               }}
             />
           </Card>
-          <LineChart 
+          <LineChart
             trades={trades}
             accountBalance={user?.accountBalance || "0"}
           />
@@ -118,9 +114,9 @@ export default function Dashboard() {
 
         {/* Balance dialog for new users */}
         <Dialog open={showBalanceDialog} onOpenChange={setShowBalanceDialog}>
-          <BalanceForm 
-            isNewUser 
-            onClose={() => setShowBalanceDialog(false)} 
+          <BalanceForm
+            isNewUser
+            onClose={() => setShowBalanceDialog(false)}
             currentBalance={user?.accountBalance || "0"}
           />
         </Dialog>
