@@ -92,7 +92,7 @@ export function setupAuth(app: Express) {
           firebaseId: decodedToken.uid,
           email: decodedToken.email || '',
           displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-          photoURL: decoded.picture || '',
+          photoURL: decodedToken.picture || '',
         });
         console.log('New user created:', { id: user.id, email: user.email });
       }

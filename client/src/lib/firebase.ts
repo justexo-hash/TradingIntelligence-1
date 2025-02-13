@@ -72,7 +72,8 @@ export const signInWithProvider = async (providerName: string) => {
       uid: result.user.uid,
       email: result.user.email,
       hostname: window.location.hostname,
-      isProduction
+      isProduction,
+      authDomain: firebaseConfig.authDomain
     });
 
     return result.user;
@@ -103,7 +104,8 @@ export const signInWithEmail = async (email: string, password: string) => {
     console.log("Token obtained after email sign in:", {
       success: !!token,
       uid: result.user.uid,
-      hostname: window.location.hostname
+      hostname: window.location.hostname,
+      isProduction
     });
     return result.user;
   } catch (error: any) {
@@ -127,7 +129,8 @@ export const registerWithEmail = async (email: string, password: string) => {
     console.log("Token obtained after registration:", {
       success: !!token,
       uid: result.user.uid,
-      hostname: window.location.hostname
+      hostname: window.location.hostname,
+      isProduction
     });
     return result.user;
   } catch (error: any) {
@@ -168,7 +171,8 @@ onAuthStateChanged(auth, async (user) => {
         uid: user.uid,
         email: user.email,
         hostname: window.location.hostname,
-        isProduction
+        isProduction,
+        authDomain: firebaseConfig.authDomain
       });
 
       // Set up periodic token refresh (every 30 minutes)
