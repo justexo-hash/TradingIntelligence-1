@@ -38,7 +38,7 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Account Balance
             </p>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold text-[rgb(var(--solana-green))] [text-shadow:0_0_10px_rgb(var(--solana-green))]">
               {Number(accountBalance || 0).toFixed(4)} SOL
             </h3>
           </div>
@@ -55,7 +55,7 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Net P&L
             </p>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold text-[rgb(var(--solana-green))] [text-shadow:0_0_10px_rgb(var(--solana-green))]">
               {totalPnl.toFixed(4)} SOL
             </h3>
           </div>
@@ -72,7 +72,7 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Win Rate
             </p>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold text-[rgb(var(--solana-green))] [text-shadow:0_0_10px_rgb(var(--solana-green))]">
               {winRate}% ({winningTrades}/{totalTrades})
             </h3>
           </div>
