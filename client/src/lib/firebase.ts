@@ -8,9 +8,16 @@ import {
   signOut 
 } from "firebase/auth";
 
+// Get the current hostname for dynamic authDomain configuration
+const currentHostname = window.location.hostname;
+const isLocalhost = currentHostname.includes('localhost') || currentHostname.includes('replit.dev');
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  // Use the replit.app domain for production, and localhost for development
+  authDomain: isLocalhost 
+    ? `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`
+    : 'trading-intelligence-1-kroleonleon.replit.app',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -19,7 +26,9 @@ const firebaseConfig = {
 
 console.log('Initializing Firebase with config:', {
   projectId: firebaseConfig.projectId,
-  authDomain: firebaseConfig.authDomain
+  authDomain: firebaseConfig.authDomain,
+  currentHostname,
+  isLocalhost
 });
 
 // Initialize Firebase with error handling
