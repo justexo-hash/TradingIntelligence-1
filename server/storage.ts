@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { trades, journals, insights, users, sharedTrades, achievements, resources, tradeReviews } from "@shared/schema";
 import type { User, Trade, Journal, Insight, SharedTrade, Achievement, Resource, TradeReview } from "@shared/schema";
 import type { InsertUser, InsertSharedTrade, InsertAchievement, InsertResource, InsertTradeReview } from "@shared/schema";
@@ -7,7 +7,6 @@ import { db } from "./db";
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
   getUserByFirebaseId(firebaseId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(id: number, balance: string): Promise<void>;
@@ -54,11 +53,6 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
 
@@ -111,8 +105,12 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(trades)
-      .where(eq(trades.userId, userId))
-      .where(eq(trades.date, date));
+      .where(
+        and(
+          eq(trades.userId, userId),
+          eq(trades.date, date)
+        )
+      );
   }
 
   async createSharedTrade(trade: InsertSharedTrade): Promise<SharedTrade> {
