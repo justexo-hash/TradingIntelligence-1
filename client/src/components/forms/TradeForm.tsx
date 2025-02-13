@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertTradeSchema, type InsertTrade, type Trade } from "@shared/schema";
 import {
   DialogContent,
@@ -22,16 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Plus, Loader2, AlertCircle } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -61,7 +53,7 @@ const mistakeOptions = [
 ];
 
 interface TradeFormProps {
-  editingTrade?: Trade | null;
+  editingTrade: Trade | null;
 }
 
 export default function TradeForm({ editingTrade }: TradeFormProps) {
@@ -83,22 +75,25 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   const { data: tokenInfo, isLoading: isLoadingToken, error: tokenError } = useQuery({
     queryKey: [`/api/token/${contractAddress}`],
     enabled: !!contractAddress && contractAddress.length > 0,
-    retry: 1, // Only retry once to avoid too many failed requests
-    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
+    retry: 1, 
+    staleTime: 5 * 60 * 1000, 
   });
 
   const form = useForm<InsertTrade>({
     resolver: zodResolver(insertTradeSchema),
     defaultValues: {
-      userId: user?.id,
-      contractAddress: "",
-      buyAmount: "0",
-      sellAmount: "0",
-      setup: [],
-      emotion: [],
-      mistakes: [],
-      notes: "",
-      date: new Date(),
+      userId: user?.id || 0,
+      contractAddress: editingTrade?.contractAddress || "",
+      buyAmount: editingTrade?.buyAmount || "0",
+      sellAmount: editingTrade?.sellAmount || "0",
+      setup: editingTrade?.setup || [],
+      emotion: editingTrade?.emotion || [],
+      mistakes: editingTrade?.mistakes || [],
+      notes: editingTrade?.notes || "",
+      date: editingTrade?.date ? new Date(editingTrade.date) : new Date(),
+      tokenName: null,
+      tokenSymbol: null,
+      tokenImage: null,
     },
   });
 
@@ -115,10 +110,12 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
 
   const createTradeMutation = useMutation({
     mutationFn: async (data: InsertTrade) => {
-      return apiRequest("POST", "/api/trades", data);
+      const response = await apiRequest("POST", "/api/trades", data);
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
@@ -130,7 +127,8 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
         closeButton.click();
       }
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Trade creation error:", error);
       toast({
         title: "Error",
         description: "Failed to save trade. Please try again.",
@@ -141,10 +139,12 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
 
   const updateTradeMutation = useMutation({
     mutationFn: async (data: InsertTrade & { id: number }) => {
-      return apiRequest("PATCH", `/api/trades/${data.id}`, data);
+      const response = await apiRequest("PATCH", `/api/trades/${data.id}`, data);
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
@@ -156,7 +156,8 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
         closeButton.click();
       }
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Trade update error:", error);
       toast({
         title: "Error",
         description: "Failed to update trade. Please try again.",
@@ -166,9 +167,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   });
 
   const onSubmit = (data: InsertTrade) => {
-    const finalSetup = data.setup?.map(s => s === "Other" ? customSetup : s).filter(Boolean);
-    const finalEmotion = data.emotion?.map(e => e === "Other" ? customEmotion : e).filter(Boolean);
-    const finalMistakes = data.mistakes?.map(m => m === "Other" ? customMistake : m).filter(Boolean);
+    console.log("Form submitted with data:", data);
 
     const totalBuyAmount = buys
       .reduce((sum, buy) => sum + (Number(buy.amount) || 0), 0)
@@ -177,17 +176,22 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
       .reduce((sum, sell) => sum + (Number(sell.amount) || 0), 0)
       .toString();
 
-    const tradeData = {
+    const finalSetup = data.setup?.map(s => s === "Other" ? customSetup : s).filter(Boolean) as string[];
+    const finalEmotion = data.emotion?.map(e => e === "Other" ? customEmotion : e).filter(Boolean) as string[];
+    const finalMistakes = data.mistakes?.map(m => m === "Other" ? customMistake : m).filter(Boolean) as string[];
+
+    const tradeData: InsertTrade = {
       ...data,
+      userId: user?.id || 0,
       buyAmount: totalBuyAmount,
       sellAmount: totalSellAmount,
-      tokenName: tokenInfo?.name || null,
-      tokenSymbol: tokenInfo?.symbol || null,
-      tokenImage: tokenInfo?.image || null,
       setup: finalSetup,
       emotion: finalEmotion,
       mistakes: finalMistakes,
+      date: new Date(),
     };
+
+    console.log("Submitting trade data:", tradeData);
 
     if (editingTrade) {
       updateTradeMutation.mutate({ ...tradeData, id: editingTrade.id });
