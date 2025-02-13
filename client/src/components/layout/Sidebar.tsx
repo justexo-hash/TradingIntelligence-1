@@ -24,7 +24,7 @@ export default function Sidebar() {
 
   return (
     <div className="group hidden md:flex h-full w-20 hover:w-72 transition-all duration-300 flex-col bg-[rgb(var(--trade-bg))] border-r border-[rgb(var(--trade-green))]/20">
-      <div className="flex h-16 items-center px-4 hover:px-8 transition-all duration-300 border-b border-[rgb(var(--trade-green))]/20">
+      <div className="flex h-16 shrink-0 items-center justify-center group-hover:justify-start px-4 hover:px-8 transition-all duration-300 border-b border-[rgb(var(--trade-green))]/20">
         <img src="/logo.png" alt="Logo" className="h-8" />
       </div>
 
@@ -36,7 +36,7 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group/item relative flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-300",
+                "group/item relative flex items-center justify-center group-hover:justify-start px-3 py-3 text-sm font-medium rounded-xl transition-all duration-300",
                 "hover:bg-[rgb(var(--trade-green))]/10",
                 isActive
                   ? "bg-[rgb(var(--trade-green))]/20 text-[rgb(var(--trade-green))]"
@@ -61,7 +61,7 @@ export default function Sidebar() {
                 )}
               />
 
-              <span className="ml-3 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
+              <span className="ml-3 absolute left-[50px] opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
                 {item.name}
                 <span
                   className={cn(
@@ -78,10 +78,10 @@ export default function Sidebar() {
       <div className="border-t border-[rgb(var(--trade-green))]/20 p-2 group-hover:p-4 transition-all duration-300">
         <button
           onClick={() => logoutMutation.mutate()}
-          className="group/item flex w-full items-center px-3 py-3 text-sm font-medium text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))] rounded-xl transition-all duration-300 hover:bg-[rgb(var(--trade-green))]/10"
+          className="group/item flex w-full items-center justify-center group-hover:justify-start px-3 py-3 text-sm font-medium text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))] rounded-xl transition-all duration-300 hover:bg-[rgb(var(--trade-green))]/10"
         >
           <LogOut className="h-5 w-5 text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60 transition-colors duration-300" />
-          <span className="ml-3 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
+          <span className="ml-3 absolute left-[50px] opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap">
             Sign Out
           </span>
         </button>
