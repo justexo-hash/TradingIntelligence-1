@@ -17,7 +17,7 @@ export function registerRoutes(app: Express) {
 
   // Authentication middleware for API routes
   const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.isAuthenticated()) {
+    if (!req.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     next();
