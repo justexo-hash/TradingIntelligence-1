@@ -17,6 +17,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+console.log('Initializing Firebase with config:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain
+});
+
 // Initialize Firebase with error handling
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -37,7 +42,9 @@ export const signInWithProvider = async (providerName: string) => {
     }
 
     const result = await signInWithPopup(auth, googleProvider);
-    console.log("Successfully signed in");
+    console.log("Successfully signed in, requesting token...");
+    const token = await result.user.getIdToken(true);
+    console.log("Token received:", token ? "Valid token" : "No token received");
     return result.user;
   } catch (error: any) {
     console.error(`Error signing in with ${providerName}: `, error);
@@ -95,5 +102,20 @@ export const signOutUser = async () => {
     throw error;
   }
 };
+
+// Add token refresh and verification
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    console.log('Auth state changed: User is signed in');
+    try {
+      const token = await user.getIdToken(true);
+      console.log('Token refreshed:', token ? 'Valid token received' : 'No token received');
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+    }
+  } else {
+    console.log('Auth state changed: User is signed out');
+  }
+});
 
 export { auth };

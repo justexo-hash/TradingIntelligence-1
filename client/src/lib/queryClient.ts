@@ -4,6 +4,7 @@ import { auth } from "./firebase";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = await res.text();
+    console.error(`API Error: ${res.status} - ${text}`);
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -14,8 +15,12 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   try {
+    console.log(`Making ${method} request to ${url}`);
     const token = await auth.currentUser?.getIdToken(true); // Force token refresh
+    console.log('Token status:', token ? 'Token obtained' : 'No token available');
+
     if (!token) {
+      console.error('No authentication token available - user might not be logged in');
       throw new Error("No authentication token available");
     }
 
@@ -23,6 +28,11 @@ export async function apiRequest(
       ...(data ? { "Content-Type": "application/json" } : {}),
       "Authorization": `Bearer ${token}`,
     };
+
+    console.log('Request headers:', { 
+      hasContentType: !!data,
+      hasAuthorization: !!headers.Authorization
+    });
 
     const res = await fetch(url, {
       method,
@@ -47,17 +57,26 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
+      console.log('Executing query:', queryKey[0]);
       const token = await auth.currentUser?.getIdToken(true); // Force token refresh
+      console.log('Query token status:', token ? 'Token obtained' : 'No token available');
+
       if (!token) {
         if (unauthorizedBehavior === "returnNull") {
+          console.log('No token available, returning null as configured');
           return null;
         }
+        console.error('No authentication token available for query');
         throw new Error("No authentication token available");
       }
 
       const headers: Record<string, string> = {
         "Authorization": `Bearer ${token}`,
       };
+
+      console.log('Query headers:', {
+        hasAuthorization: !!headers.Authorization
+      });
 
       const res = await fetch(queryKey[0] as string, {
         headers,
@@ -66,6 +85,7 @@ export const getQueryFn: <T>(options: {
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        console.log('Received 401, returning null as configured');
         return null;
       }
 
@@ -88,8 +108,10 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         // Don't retry on auth errors
         if (error instanceof Error && error.message.startsWith("401:")) {
+          console.log('Not retrying 401 error');
           return false;
         }
+        console.log(`Retrying query (attempt ${failureCount + 1}/3)`);
         return failureCount < 3;
       },
     },
