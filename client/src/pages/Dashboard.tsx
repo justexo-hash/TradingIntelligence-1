@@ -97,7 +97,6 @@ export default function Dashboard() {
               }}
             />
           </Card>
-
           <LineChart 
             trades={trades}
             accountBalance={user?.accountBalance || "0"}
