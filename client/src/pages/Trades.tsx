@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,19 +24,37 @@ import {
 import TradeForm from "@/components/forms/TradeForm";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Trade } from "@shared/schema";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 type SortOption = "name" | "date" | "pnl" | "buyAmount";
+
+const shareTradeSchema = z.object({
+  analysis: z.string().min(1, "Analysis is required").max(1000, "Analysis must be less than 1000 characters"),
+});
+
+type ShareTradeForm = z.infer<typeof shareTradeSchema>;
 
 export default function Trades() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
+  const [sharingTrade, setSharingTrade] = useState<Trade | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("date");
+
+  const shareForm = useForm<ShareTradeForm>({
+    resolver: zodResolver(shareTradeSchema),
+    defaultValues: {
+      analysis: "",
+    },
+  });
 
   const { data: trades } = useQuery<Trade[]>({
     queryKey: [`/api/trades/${user?.id}`],
@@ -62,6 +81,28 @@ export default function Trades() {
     },
   });
 
+  const shareTradeMutation = useMutation({
+    mutationFn: async ({ tradeId, analysis }: { tradeId: number; analysis: string }) => {
+      return apiRequest("POST", "/api/shared-trades", { tradeId, analysis });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      toast({
+        title: "Success",
+        description: "Trade shared successfully. You earned 10 experience points!",
+      });
+      setSharingTrade(null);
+      shareForm.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to share trade. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const sortedTrades = [...(trades || [])].sort((a, b) => {
     switch (sortBy) {
       case "name":
@@ -80,6 +121,11 @@ export default function Trades() {
         return 0;
     }
   });
+
+  const onShareSubmit = (data: ShareTradeForm) => {
+    if (!sharingTrade) return;
+    shareTradeMutation.mutate({ tradeId: sharingTrade.id, analysis: data.analysis });
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -156,6 +202,54 @@ export default function Trades() {
                       </DialogTrigger>
                       {editingTrade?.id === trade.id && <TradeForm editingTrade={trade} />}
                     </Dialog>
+
+                    {!trade.isShared && (
+                      <Dialog open={sharingTrade?.id === trade.id} onOpenChange={(open) => !open && setSharingTrade(null)}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setSharingTrade(trade)}
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Share Trade</DialogTitle>
+                            <DialogDescription>
+                              Share your trade with the community. Add your analysis to help others learn from your experience.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <Form {...shareForm}>
+                            <form onSubmit={shareForm.handleSubmit(onShareSubmit)}>
+                              <FormField
+                                control={shareForm.control}
+                                name="analysis"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Analysis</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        placeholder="Share your thoughts on this trade..."
+                                        className="min-h-[100px]"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              <DialogFooter className="mt-4">
+                                <Button type="submit" disabled={shareTradeMutation.isPending}>
+                                  Share Trade
+                                </Button>
+                              </DialogFooter>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon">

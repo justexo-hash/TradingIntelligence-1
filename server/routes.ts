@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
-import { insertTradeSchema, insertJournalSchema } from "@shared/schema";
+import { insertTradeSchema, insertJournalSchema, insertSharedTradeSchema } from "@shared/schema";
 import { generateTradeInsights } from "./ai";
 import { z } from "zod";
 import { setupAuth } from "./auth";
@@ -281,6 +281,84 @@ export function registerRoutes(app: Express) {
       res.json(insights);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch insights" });
+    }
+  });
+
+  // Shared Trades
+  app.post("/api/shared-trades", requireAuth, async (req, res) => {
+    try {
+      const trade = await storage.getTrade(req.body.tradeId);
+      if (!trade || trade.userId !== req.user!.id) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      const sharedTrade = insertSharedTradeSchema.parse({
+        tradeId: trade.id,
+        userId: req.user!.id,
+        tokenName: trade.tokenName,
+        tokenSymbol: trade.tokenSymbol,
+        setup: trade.setup,
+        outcome: Number(trade.sellAmount) - Number(trade.buyAmount),
+        analysis: req.body.analysis,
+      });
+
+      // Mark the original trade as shared
+      await storage.updateTrade(trade.id, { ...trade, isShared: true });
+
+      const result = await storage.createSharedTrade(sharedTrade);
+
+      // Award experience points for sharing
+      const user = await storage.getUser(req.user!.id);
+      if (user) {
+        await storage.updateUserExperience(user.id, (user.experience || 0) + 10);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error sharing trade:", error);
+      res.status(400).json({ error: "Invalid trade data" });
+    }
+  });
+
+  app.get("/api/shared-trades", async (req, res) => {
+    try {
+      const trades = await storage.getSharedTrades();
+      res.json(trades);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shared trades" });
+    }
+  });
+
+  app.post("/api/shared-trades/:id/like", requireAuth, async (req, res) => {
+    try {
+      await storage.updateSharedTradeLikes(Number(req.params.id));
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to like trade" });
+    }
+  });
+
+  app.post("/api/shared-trades/:id/comment", requireAuth, async (req, res) => {
+    try {
+      const { content } = req.body;
+      if (!content) {
+        return res.status(400).json({ error: "Comment content is required" });
+      }
+
+      await storage.addCommentToSharedTrade(Number(req.params.id), {
+        userId: req.user!.id,
+        content,
+      });
+
+      // Award experience points for commenting
+      const user = await storage.getUser(req.user!.id);
+      if (user) {
+        await storage.updateUserExperience(user.id, (user.experience || 0) + 2);
+      }
+
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add comment" });
     }
   });
 

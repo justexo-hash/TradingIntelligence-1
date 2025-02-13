@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
-import { trades, journals, insights, users } from "@shared/schema";
-import type { User, Trade, Journal, Insight } from "@shared/schema";
-import type { InsertUser } from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
+import { trades, journals, insights, users, sharedTrades, achievements, resources, tradeReviews } from "@shared/schema";
+import type { User, Trade, Journal, Insight, SharedTrade, Achievement, Resource, TradeReview } from "@shared/schema";
+import type { InsertUser, InsertSharedTrade, InsertAchievement, InsertResource, InsertTradeReview } from "@shared/schema";
 import { db } from "./db";
 
 export interface IStorage {
@@ -10,14 +10,36 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(id: number, balance: string): Promise<void>;
+  updateUserExperience(id: number, experience: number): Promise<void>;
 
   // Trades
   createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade>;
   getTrade(id: number): Promise<Trade | undefined>;
-  updateTrade(id: number, trade: Omit<Trade, "id" | "date">): Promise<Trade>;
+  updateTrade(id: number, trade: Partial<Omit<Trade, "id" | "date">>): Promise<Trade>;
   deleteTrade(id: number): Promise<void>;
   getTradesByUser(userId: number): Promise<Trade[]>;
   getTradesByDate(userId: number, date: Date): Promise<Trade[]>;
+
+  // Shared Trades
+  createSharedTrade(trade: InsertSharedTrade): Promise<SharedTrade>;
+  getSharedTrade(id: number): Promise<SharedTrade | undefined>;
+  getSharedTrades(): Promise<SharedTrade[]>;
+  updateSharedTradeLikes(id: number): Promise<void>;
+  addCommentToSharedTrade(id: number, comment: { userId: number; content: string }): Promise<void>;
+
+  // Achievements
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  getAchievementsByUser(userId: number): Promise<Achievement[]>;
+
+  // Resources
+  createResource(resource: InsertResource): Promise<Resource>;
+  getResources(): Promise<Resource[]>;
+  getResourcesByCategory(category: string): Promise<Resource[]>;
+
+  // Trade Reviews
+  createTradeReview(review: InsertTradeReview): Promise<TradeReview>;
+  getTradeReviews(sharedTradeId: number): Promise<TradeReview[]>;
+  updateTradeReviewHelpful(id: number): Promise<void>;
 
   // Journals
   createJournal(journal: Omit<Journal, "id" | "date">): Promise<Journal>;
@@ -45,23 +67,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserBalance(id: number, balance: string): Promise<void> {
-    console.log('Storage: Updating balance for user', id, 'to', balance);
-    try {
-      await db
-        .update(users)
-        .set({ accountBalance: balance })
-        .where(eq(users.id, id));
+    await db.update(users).set({ accountBalance: balance }).where(eq(users.id, id));
+  }
 
-      // Verify the update
-      const [updatedUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, id));
-      console.log('Storage: Updated user:', updatedUser);
-    } catch (error) {
-      console.error('Storage: Error updating balance:', error);
-      throw error;
-    }
+  async updateUserExperience(id: number, experience: number): Promise<void> {
+    await db.update(users).set({ experience }).where(eq(users.id, id));
   }
 
   async createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade> {
@@ -74,7 +84,7 @@ export class DatabaseStorage implements IStorage {
     return trade;
   }
 
-  async updateTrade(id: number, trade: Omit<Trade, "id" | "date">): Promise<Trade> {
+  async updateTrade(id: number, trade: Partial<Omit<Trade, "id" | "date">>): Promise<Trade> {
     const [updatedTrade] = await db
       .update(trades)
       .set(trade)
@@ -97,6 +107,76 @@ export class DatabaseStorage implements IStorage {
       .from(trades)
       .where(eq(trades.userId, userId))
       .where(eq(trades.date, date));
+  }
+
+  async createSharedTrade(trade: InsertSharedTrade): Promise<SharedTrade> {
+    const [sharedTrade] = await db.insert(sharedTrades).values(trade).returning();
+    return sharedTrade;
+  }
+
+  async getSharedTrade(id: number): Promise<SharedTrade | undefined> {
+    const [trade] = await db.select().from(sharedTrades).where(eq(sharedTrades.id, id));
+    return trade;
+  }
+
+  async getSharedTrades(): Promise<SharedTrade[]> {
+    return db.select().from(sharedTrades).orderBy(sharedTrades.date);
+  }
+
+  async updateSharedTradeLikes(id: number): Promise<void> {
+    await db
+      .update(sharedTrades)
+      .set({ likes: sql`${sharedTrades.likes} + 1` })
+      .where(eq(sharedTrades.id, id));
+  }
+
+  async addCommentToSharedTrade(id: number, comment: { userId: number; content: string }): Promise<void> {
+    const trade = await this.getSharedTrade(id);
+    if (!trade) return;
+
+    const comments = [...(trade.comments as any[] || []), { ...comment, timestamp: new Date() }];
+    await db
+      .update(sharedTrades)
+      .set({ comments })
+      .where(eq(sharedTrades.id, id));
+  }
+
+  async createAchievement(achievement: InsertAchievement): Promise<Achievement> {
+    const [newAchievement] = await db.insert(achievements).values(achievement).returning();
+    return newAchievement;
+  }
+
+  async getAchievementsByUser(userId: number): Promise<Achievement[]> {
+    return db.select().from(achievements).where(eq(achievements.userId, userId));
+  }
+
+  async createResource(resource: InsertResource): Promise<Resource> {
+    const [newResource] = await db.insert(resources).values(resource).returning();
+    return newResource;
+  }
+
+  async getResources(): Promise<Resource[]> {
+    return db.select().from(resources).orderBy(resources.createdAt);
+  }
+
+  async getResourcesByCategory(category: string): Promise<Resource[]> {
+    return db.select().from(resources).where(eq(resources.category, category));
+  }
+
+  async createTradeReview(review: InsertTradeReview): Promise<TradeReview> {
+    const [newReview] = await db.insert(tradeReviews).values(review).returning();
+    return newReview;
+  }
+
+  async getTradeReviews(sharedTradeId: number): Promise<TradeReview[]> {
+    return db.select().from(tradeReviews).where(eq(tradeReviews.sharedTradeId, sharedTradeId));
+  }
+
+  async updateTradeReviewHelpful(id: number): Promise<void> {
+    await db
+      .update(tradeReviews)
+      .set({ helpful: sql`${tradeReviews.helpful} + 1` })
+      .where(eq(tradeReviews.id, id));
   }
 
   async createJournal(journal: Omit<Journal, "id" | "date">): Promise<Journal> {
