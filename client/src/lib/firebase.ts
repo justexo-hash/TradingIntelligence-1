@@ -21,11 +21,16 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
 export const signInWithGoogle = async () => {
   try {
+    console.log("Attempting to sign in with Google...");
+    console.log("Current authDomain:", firebaseConfig.authDomain);
     const result = await signInWithPopup(auth, googleProvider);
     console.log("Successfully signed in with Google");
     return result.user;
   } catch (error: any) {
     console.error("Error signing in with Google: ", error);
+    if (error.code === 'auth/unauthorized-domain') {
+      throw new Error(`Please add ${window.location.hostname} to Firebase Console's Authorized Domains list.`);
+    }
     if (error.code === 'auth/configuration-not-found') {
       throw new Error("Firebase configuration error. Please check your Firebase setup and authorized domains.");
     }
