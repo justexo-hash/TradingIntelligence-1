@@ -27,30 +27,18 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
     mutationFn: async (newBalance: string) => {
       console.log("Updating balance to:", newBalance);
 
-      // Optimistically update the cached user data
-      const currentUser = queryClient.getQueryData(["/api/user"]);
-      if (currentUser) {
-        queryClient.setQueryData(["/api/user"], {
-          ...currentUser,
-          accountBalance: newBalance
-        });
-      }
-
       const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
       if (!response.ok) {
-        // If the update fails, rollback the optimistic update
-        if (currentUser) {
-          queryClient.setQueryData(["/api/user"], currentUser);
-        }
         const error = await response.json();
         throw new Error(error.message || "Failed to update balance");
       }
       return await response.json();
     },
     onSuccess: (updatedUser) => {
-      // Force refetch of all relevant queries
+      // Force an immediate cache update with the new user data
       queryClient.setQueryData(["/api/user"], updatedUser);
-      // Invalidate and refetch related queries
+
+      // Invalidate and refetch all related queries
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
 
