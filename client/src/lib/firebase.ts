@@ -6,7 +6,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from "firebase/auth";
 
 // Initialize Firebase configuration
@@ -32,6 +34,15 @@ console.log('Firebase Config:', {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Set persistence to LOCAL
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Firebase persistence set to LOCAL');
+  })
+  .catch((error) => {
+    console.error('Error setting persistence:', error);
+  });
 
 // Initialize provider
 const googleProvider = new GoogleAuthProvider();
@@ -122,21 +133,25 @@ export const registerWithEmail = async (email: string, password: string) => {
 export const signOutUser = async () => {
   try {
     await signOut(auth);
-    console.log("Successfully signed out on:", window.location.hostname);
+    console.log("Successfully signed out");
+    // Clear any cached tokens or state
+    localStorage.removeItem('firebase:previous_websocket_failure');
   } catch (error) {
     console.error("Error signing out:", error);
     throw error;
   }
 };
 
-// Add token refresh handler
+// Add token refresh handler with aggressive refresh on browser focus
+let tokenRefreshTimeout: number | null = null;
+
 onAuthStateChanged(auth, async (user) => {
   const currentHost = window.location.hostname;
   console.log('Auth state changed on', currentHost, ':', user ? 'User logged in' : 'No user');
 
   if (user) {
     try {
-      // Always get a fresh token on auth state change
+      // Initial token refresh
       const token = await user.getIdToken(true);
       console.log('Token refresh result:', {
         success: !!token,
@@ -145,13 +160,38 @@ onAuthStateChanged(auth, async (user) => {
         hostname: currentHost,
         timestamp: new Date().toISOString()
       });
-    } catch (error) {
-      console.error('Token refresh failed:', {
-        error,
-        uid: user.uid,
-        hostname: currentHost,
-        timestamp: new Date().toISOString()
+
+      // Set up periodic token refresh (every 30 minutes)
+      if (tokenRefreshTimeout) {
+        window.clearTimeout(tokenRefreshTimeout);
+      }
+      tokenRefreshTimeout = window.setInterval(async () => {
+        try {
+          await user.getIdToken(true);
+          console.log('Periodic token refresh successful');
+        } catch (error) {
+          console.error('Periodic token refresh failed:', error);
+        }
+      }, 30 * 60 * 1000);
+
+      // Add focus listener for additional token refresh
+      window.addEventListener('focus', async () => {
+        try {
+          await user.getIdToken(true);
+          console.log('Token refreshed on window focus');
+        } catch (error) {
+          console.error('Token refresh on focus failed:', error);
+        }
       });
+
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    }
+  } else {
+    // Clear token refresh interval
+    if (tokenRefreshTimeout) {
+      window.clearTimeout(tokenRefreshTimeout);
+      tokenRefreshTimeout = null;
     }
   }
 });
