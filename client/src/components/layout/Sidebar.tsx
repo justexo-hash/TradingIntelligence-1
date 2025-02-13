@@ -23,9 +23,13 @@ export default function Sidebar() {
   const { logoutMutation } = useAuth();
 
   return (
-    <div className="group hidden md:flex h-full w-20 hover:w-72 transition-[width] duration-300 ease-in-out transform will-change-[width] flex-col bg-[rgb(var(--trade-bg))] border-r border-[rgb(var(--trade-green))]/20">
-      <div className="flex h-16 shrink-0 items-center justify-center group-hover:justify-start px-4 transition-[padding] duration-300 border-b border-[rgb(var(--trade-green))]/20">
-        <img src="/logo.png" alt="Logo" className="h-8 transition-transform duration-300" />
+    <div className="group hidden md:flex h-full w-20 hover:w-52 transition-[width] duration-300 ease-in-out transform will-change-[width] flex-col bg-[rgb(var(--trade-bg))] border-r border-[rgb(var(--trade-green))]/20">
+      <div className="flex h-26 shrink-0 items-center justify-center group-hover:justify-start px-0 transition-[padding] duration-300 border-b border-[rgb(var(--trade-green))]/20">
+        <img
+          src="/logo.png"
+          alt="Logo"
+          className="h-10 transition-transform duration-300"
+        />
       </div>
 
       <nav className="flex-1 space-y-2 p-2 group-hover:p-4 transition-[padding] duration-300">
@@ -40,7 +44,7 @@ export default function Sidebar() {
                 "hover:bg-[rgb(var(--trade-green))]/10",
                 isActive
                   ? "bg-[rgb(var(--trade-green))]/20 text-[rgb(var(--trade-green))]"
-                  : "text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))]"
+                  : "text-[rgb(var(--trade-font))]/60 hover:text-[rgb(var(--trade-font))]",
               )}
             >
               <div className="flex items-center w-full">
@@ -50,7 +54,7 @@ export default function Sidebar() {
                       "h-5 w-5 transition-colors duration-300",
                       isActive
                         ? "text-[rgb(var(--trade-green))]"
-                        : "text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60"
+                        : "text-[rgb(var(--trade-font))]/40 group-hover/item:text-[rgb(var(--trade-font))]/60",
                     )}
                   />
                 </div>
@@ -63,7 +67,7 @@ export default function Sidebar() {
                   "absolute inset-y-0 left-0 w-1 rounded-full transition-colors duration-300",
                   isActive
                     ? "bg-[rgb(var(--trade-green))]"
-                    : "bg-transparent group-hover:bg-[rgb(var(--trade-green))]/30"
+                    : "bg-transparent group-hover:bg-[rgb(var(--trade-green))]/30",
                 )}
               />
             </Link>

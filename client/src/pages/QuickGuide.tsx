@@ -31,7 +31,7 @@ export default function QuickGuide() {
 
       <div className="relative container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold md:text-4xl bg-gradient-to-r from-[rgb(var(--solana-green))] via-[rgb(var(--solana-purple))] to-[rgb(var(--solana-green))] bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
             Quick Guide
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
