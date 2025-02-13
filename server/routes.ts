@@ -111,8 +111,10 @@ export function registerRoutes(app: Express) {
         name: data.name || null,
         symbol: data.symbol || null,
         image: data.image_uri || null,
-        usdMarketCap: data.usd_market_cap || null,
-        solMarketCap: data.market_cap || null,
+        description: data.description || null,
+        usdMarketCap: data.usd_market_cap ? `$${Number(data.usd_market_cap).toLocaleString()}` : 'N/A',
+        price: data.price ? `$${Number(data.price).toFixed(4)}` : 'N/A',
+        volume24h: data.volume_24h ? `$${Number(data.volume_24h).toLocaleString()}` : 'N/A'
       };
 
       console.log("Processed token data:", tokenData);
