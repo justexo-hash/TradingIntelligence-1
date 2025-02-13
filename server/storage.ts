@@ -24,7 +24,7 @@ export interface IStorage {
   createSharedTrade(trade: InsertSharedTrade): Promise<SharedTrade>;
   getSharedTrade(id: number): Promise<SharedTrade | undefined>;
   getSharedTrades(): Promise<SharedTrade[]>;
-  updateSharedTradeLikes(id: number): Promise<void>;
+  updateSharedTradeLikes(id: number, userId: number): Promise<void>;
   addCommentToSharedTrade(id: number, comment: { userId: number; content: string }): Promise<void>;
 
   // Achievements
@@ -123,10 +123,19 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(sharedTrades).orderBy(sharedTrades.date);
   }
 
-  async updateSharedTradeLikes(id: number): Promise<void> {
+  async updateSharedTradeLikes(id: number, userId: number): Promise<void> {
+    const trade = await this.getSharedTrade(id);
+    if (!trade) return;
+
+    const likedBy = trade.likedBy || [];
+    if (likedBy.includes(userId)) return;
+
     await db
       .update(sharedTrades)
-      .set({ likes: sql`${sharedTrades.likes} + 1` })
+      .set({
+        likes: sql`${sharedTrades.likes} + 1`,
+        likedBy: [...likedBy, userId]
+      })
       .where(eq(sharedTrades.id, id));
   }
 

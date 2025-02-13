@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export default function SharedTrades() {
   const { user } = useAuth();
@@ -118,9 +119,12 @@ export default function SharedTrades() {
                   variant="ghost"
                   size="sm"
                   onClick={() => likeTradeMutation.mutate(trade.id)}
-                  disabled={likeTradeMutation.isPending}
+                  disabled={likeTradeMutation.isPending || (trade.likedBy || []).includes(user?.id!)}
                 >
-                  <ThumbsUp className="h-4 w-4 mr-2" />
+                  <ThumbsUp className={cn(
+                    "h-4 w-4 mr-2",
+                    (trade.likedBy || []).includes(user?.id!) && "text-primary"
+                  )} />
                   {trade.likes || 0}
                 </Button>
 

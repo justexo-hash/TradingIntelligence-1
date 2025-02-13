@@ -331,7 +331,17 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/shared-trades/:id/like", requireAuth, async (req, res) => {
     try {
-      await storage.updateSharedTradeLikes(Number(req.params.id));
+      const trade = await storage.getSharedTrade(Number(req.params.id));
+      if (!trade) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+
+      const likedBy = trade.likedBy || [];
+      if (likedBy.includes(req.user!.id)) {
+        return res.status(400).json({ error: "You have already liked this trade" });
+      }
+
+      await storage.updateSharedTradeLikes(Number(req.params.id), req.user!.id);
       res.sendStatus(200);
     } catch (error) {
       res.status(500).json({ error: "Failed to like trade" });

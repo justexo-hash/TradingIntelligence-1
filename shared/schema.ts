@@ -53,10 +53,11 @@ export const sharedTrades = pgTable("shared_trades", {
   tokenName: text("token_name"),
   tokenSymbol: text("token_symbol"),
   setup: text("setup").array(),
-  outcome: text("outcome"), // Changed to text
+  outcome: text("outcome"),
   analysis: text("analysis"),
   date: timestamp("date").notNull().defaultNow(),
   likes: integer("likes").default(0),
+  likedBy: integer("liked_by").array().default([]),
   comments: json("comments").default([]),
 });
 
@@ -121,6 +122,7 @@ export const insertSharedTradeSchema = createInsertSchema(sharedTrades).omit({
   date: true,
   likes: true,
   comments: true,
+  likedBy: true,
 });
 
 export const insertAchievementSchema = createInsertSchema(achievements).omit({
