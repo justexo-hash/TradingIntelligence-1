@@ -23,28 +23,46 @@ export default function LineChart({ trades }: LineChartProps) {
   const { balance } = useBalance();
 
   const chartData = useMemo(() => {
+    // Initialize with starting balance
+    const initialData = [{
+      date: format(new Date(), "MMM d"),
+      balance: Number(balance || 0),
+      pnl: 0,
+      winrate: 0
+    }];
+
     const sortedTrades = [...trades].sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    let runningBalance = Number(balance);
+    let runningBalance = Number(balance || 0);
     let runningWins = 0;
     let totalTrades = 0;
+    let lastDate = new Date();
 
-    return sortedTrades.map(trade => {
+    const data = sortedTrades.reduce((acc, trade) => {
       const date = new Date(trade.date);
-      const pnl = Number(trade.sellAmount || 0) - Number(trade.buyAmount);
-      runningBalance += pnl;
-      totalTrades++;
-      if (pnl > 0) runningWins++;
+      const pnl = Number(trade.sellAmount || 0) - Number(trade.buyAmount || 0);
 
-      return {
-        date: format(date, "MMM d"),
-        balance: runningBalance,
-        pnl,
-        winrate: (runningWins / totalTrades) * 100
-      };
-    });
+      // If this is a new date, create a new data point
+      if (date.getTime() !== lastDate.getTime()) {
+        lastDate = date;
+        totalTrades++;
+        if (pnl > 0) runningWins++;
+        runningBalance += pnl;
+
+        acc.push({
+          date: format(date, "MMM d"),
+          balance: Number(runningBalance.toFixed(4)),
+          pnl: Number(pnl.toFixed(4)),
+          winrate: Number(((runningWins / totalTrades) * 100).toFixed(1))
+        });
+      }
+      return acc;
+    }, initialData);
+
+    console.log("Chart data:", data); // Debug log
+    return data;
   }, [trades, balance]);
 
   const getYAxisLabel = () => {
@@ -98,6 +116,7 @@ export default function LineChart({ trades }: LineChartProps) {
                 borderRadius: "var(--radius)",
               }}
               labelStyle={{ color: "hsl(var(--foreground))" }}
+              formatter={(value: number) => [value.toFixed(4), selectedMetric]}
             />
             <Line
               type="monotone"
