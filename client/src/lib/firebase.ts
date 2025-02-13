@@ -12,30 +12,23 @@ import {
 } from "firebase/auth";
 
 // Initialize Firebase configuration
-const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-const isProd = import.meta.env.VITE_PROD || window.location.hostname === 'trademate.live';
-const currentHost = window.location.hostname;
+const isProduction = window.location.hostname === 'trademate.live';
+
+console.log('Firebase initialization:', {
+  hostname: window.location.hostname,
+  isProduction,
+  hasApiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID
+});
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: currentHost === 'trademate.live' 
-    ? 'trademate.live' 
-    : `${projectId}.firebaseapp.com`,
-  projectId: projectId,
-  storageBucket: `${projectId}.appspot.com`,
+  authDomain: isProduction ? 'trademate.live' : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-
-console.log('Firebase Config:', {
-  projectId: firebaseConfig.projectId,
-  authDomain: firebaseConfig.authDomain,
-  currentHost,
-  hasApiKey: !!firebaseConfig.apiKey,
-  hasAppId: !!firebaseConfig.appId,
-  environment: isProd ? 'production' : 'development',
-  isCustomDomain: currentHost === 'trademate.live'
-});
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -44,7 +37,7 @@ const auth = getAuth(app);
 // Set persistence to LOCAL
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
-    console.log('Firebase persistence set to LOCAL on:', currentHost);
+    console.log('Firebase persistence set to LOCAL');
   })
   .catch((error) => {
     console.error('Error setting persistence:', error);
@@ -58,9 +51,9 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 // Sign in with provider (Google)
 export const signInWithProvider = async (providerName: string) => {
   try {
-    console.log(`Attempting to sign in with ${providerName} on ${currentHost}`, {
-      isProd,
-      authDomain: firebaseConfig.authDomain
+    console.log(`Attempting to sign in with ${providerName}`, {
+      hostname: window.location.hostname,
+      isProduction
     });
 
     if (providerName.toLowerCase() !== 'google') {
@@ -70,30 +63,26 @@ export const signInWithProvider = async (providerName: string) => {
     const result = await signInWithPopup(auth, googleProvider);
     console.log("Successfully signed in with Google");
 
-    // Force token refresh and verify we can get a token
-    const token = await result.user.getIdToken(isProd);
+    // Force token refresh
+    const token = await result.user.getIdToken(true);
     console.log("Token obtained after sign in:", {
       success: !!token,
       uid: result.user.uid,
-      hostname: currentHost,
-      isProd,
-      tokenLength: token ? token.length : 0 //Added to handle potential null token
+      email: result.user.email,
+      hostname: window.location.hostname
     });
 
     return result.user;
   } catch (error: any) {
     console.error(`Error signing in with ${providerName}:`, {
       error,
-      host: currentHost,
-      isProd,
-      authDomain: firebaseConfig.authDomain
+      code: error.code,
+      message: error.message,
+      hostname: window.location.hostname
     });
 
     if (error.code === 'auth/unauthorized-domain') {
-      throw new Error(`Please add ${currentHost} to Firebase Console's Authorized Domains list.`);
-    }
-    if (error.code === 'auth/configuration-not-found') {
-      throw new Error("Firebase configuration error. Please check your Firebase setup and authorized domains.");
+      throw new Error(`Please add ${window.location.hostname} to Firebase Console's Authorized Domains list.`);
     }
     throw error;
   }
@@ -152,7 +141,6 @@ export const signOutUser = async () => {
   try {
     await signOut(auth);
     console.log("Successfully signed out");
-    // Clear any cached tokens or state
     localStorage.removeItem('firebase:previous_websocket_failure');
   } catch (error) {
     console.error("Error signing out:", error);
@@ -160,12 +148,11 @@ export const signOutUser = async () => {
   }
 };
 
-// Add token refresh handler with aggressive refresh on browser focus
+// Set up token refresh
 let tokenRefreshTimeout: number | null = null;
 
 onAuthStateChanged(auth, async (user) => {
-  const currentHost = window.location.hostname;
-  console.log('Auth state changed on', currentHost, ':', user ? 'User logged in' : 'No user');
+  console.log('Auth state changed:', user ? 'User logged in' : 'No user');
 
   if (user) {
     try {
@@ -175,8 +162,7 @@ onAuthStateChanged(auth, async (user) => {
         success: !!token,
         uid: user.uid,
         email: user.email,
-        hostname: currentHost,
-        timestamp: new Date().toISOString()
+        hostname: window.location.hostname
       });
 
       // Set up periodic token refresh (every 30 minutes)
@@ -191,16 +177,6 @@ onAuthStateChanged(auth, async (user) => {
           console.error('Periodic token refresh failed:', error);
         }
       }, 30 * 60 * 1000);
-
-      // Add focus listener for additional token refresh
-      window.addEventListener('focus', async () => {
-        try {
-          await user.getIdToken(true);
-          console.log('Token refreshed on window focus');
-        } catch (error) {
-          console.error('Token refresh on focus failed:', error);
-        }
-      });
 
     } catch (error) {
       console.error('Token refresh failed:', error);

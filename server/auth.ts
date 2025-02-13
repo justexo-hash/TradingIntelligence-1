@@ -6,19 +6,18 @@ import { storage } from "./storage";
 
 // Initialize Firebase Admin with service account
 try {
-  const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true' || process.env.VITE_PROD === 'true';
+  const isProduction = process.env.CUSTOM_DOMAIN === 'true';
   console.log('Initializing Firebase Admin:', {
-    environment: isProd ? 'production' : 'development',
+    isProduction,
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
     hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL
   });
 
   initializeApp({
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     credential: cert({
       projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL || `${process.env.VITE_FIREBASE_PROJECT_ID}@appspot.gserviceaccount.com`,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
   });
@@ -30,16 +29,11 @@ try {
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true' || process.env.VITE_PROD === 'true';
-    const isCustomDomain = req.headers.host === 'trademate.live';
+    const isProduction = req.headers.host === 'trademate.live';
 
     console.log('Auth middleware check:', {
-      NODE_ENV: process.env.NODE_ENV,
-      PROD: process.env.PROD,
-      VITE_PROD: process.env.VITE_PROD,
-      isProd,
       host: req.headers.host,
-      isCustomDomain,
+      isProduction,
       hasAuth: !!req.headers.authorization
     });
 
@@ -47,7 +41,7 @@ export function setupAuth(app: Express) {
 
     // Only allow development mode bypass on non-production
     if (!authHeader?.startsWith('Bearer ')) {
-      if (!isProd && !isCustomDomain) {
+      if (!isProduction) {
         console.log('Development mode: Using mock user');
         const mockUser = await storage.getUserByFirebaseId('dev-user');
         if (!mockUser) {
@@ -73,9 +67,8 @@ export function setupAuth(app: Express) {
     try {
       const token = authHeader.split('Bearer ')[1];
       console.log('Verifying Firebase token:', {
-        environment: isProd ? 'production' : 'development',
         host: req.headers.host,
-        isCustomDomain,
+        isProduction,
         tokenLength: token.length
       });
 
@@ -83,7 +76,6 @@ export function setupAuth(app: Express) {
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        environment: isProd ? 'production' : 'development',
         host: req.headers.host
       });
 
@@ -107,7 +99,7 @@ export function setupAuth(app: Express) {
       console.error('Firebase token verification failed:', {
         error,
         host: req.headers.host,
-        isCustomDomain,
+        isProduction,
         errorCode: error.code,
         errorMessage: error.message
       });
