@@ -12,19 +12,22 @@ import {
 } from "firebase/auth";
 
 // Initialize Firebase configuration
-const isProduction = window.location.hostname === 'trademate.live';
+const currentHost = window.location.hostname;
+const isProduction = currentHost === 'trademate.live';
 
 console.log('Firebase initialization:', {
-  hostname: window.location.hostname,
+  currentHost,
   isProduction,
   hasApiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  customDomain: isProduction ? 'trademate.live' : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`
+  customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
 });
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: isProduction ? 'trademate.live' : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  authDomain: isProduction 
+    ? 'trademate.live' 
+    : 'trading-intelligence-1-kroleonleon.replit.app',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -38,7 +41,7 @@ const auth = getAuth(app);
 // Set persistence to LOCAL
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
-    console.log('Firebase persistence set to LOCAL on:', window.location.hostname);
+    console.log('Firebase persistence set to LOCAL on:', currentHost);
   })
   .catch((error) => {
     console.error('Error setting persistence:', error);
@@ -53,7 +56,7 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 export const signInWithProvider = async (providerName: string) => {
   try {
     console.log(`Attempting to sign in with ${providerName}`, {
-      hostname: window.location.hostname,
+      currentHost,
       isProduction,
       authDomain: firebaseConfig.authDomain
     });
@@ -71,7 +74,7 @@ export const signInWithProvider = async (providerName: string) => {
       success: !!token,
       uid: result.user.uid,
       email: result.user.email,
-      hostname: window.location.hostname,
+      currentHost,
       isProduction,
       authDomain: firebaseConfig.authDomain
     });
@@ -82,13 +85,13 @@ export const signInWithProvider = async (providerName: string) => {
       error,
       code: error.code,
       message: error.message,
-      hostname: window.location.hostname,
+      currentHost,
       isProduction,
       authDomain: firebaseConfig.authDomain
     });
 
     if (error.code === 'auth/unauthorized-domain') {
-      throw new Error(`Please add ${window.location.hostname} to Firebase Console's Authorized Domains list.`);
+      throw new Error(`Please add ${currentHost} to Firebase Console's Authorized Domains list.`);
     }
     throw error;
   }
@@ -97,14 +100,14 @@ export const signInWithProvider = async (providerName: string) => {
 // Email/Password authentication
 export const signInWithEmail = async (email: string, password: string) => {
   try {
-    console.log('Attempting email sign in on:', window.location.hostname);
+    console.log('Attempting email sign in on:', currentHost);
     const result = await signInWithEmailAndPassword(auth, email, password);
     console.log("Successfully signed in with email");
     const token = await result.user.getIdToken(true);
     console.log("Token obtained after email sign in:", {
       success: !!token,
       uid: result.user.uid,
-      hostname: window.location.hostname,
+      currentHost,
       isProduction
     });
     return result.user;
@@ -122,14 +125,14 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 export const registerWithEmail = async (email: string, password: string) => {
   try {
-    console.log('Attempting registration on:', window.location.hostname);
+    console.log('Attempting registration on:', currentHost);
     const result = await createUserWithEmailAndPassword(auth, email, password);
     console.log("Successfully registered with email");
     const token = await result.user.getIdToken(true);
     console.log("Token obtained after registration:", {
       success: !!token,
       uid: result.user.uid,
-      hostname: window.location.hostname,
+      currentHost,
       isProduction
     });
     return result.user;
@@ -148,7 +151,7 @@ export const registerWithEmail = async (email: string, password: string) => {
 export const signOutUser = async () => {
   try {
     await signOut(auth);
-    console.log("Successfully signed out from:", window.location.hostname);
+    console.log("Successfully signed out from:", currentHost);
     localStorage.removeItem('firebase:previous_websocket_failure');
   } catch (error) {
     console.error("Error signing out:", error);
@@ -160,7 +163,7 @@ export const signOutUser = async () => {
 let tokenRefreshTimeout: number | null = null;
 
 onAuthStateChanged(auth, async (user) => {
-  console.log('Auth state changed:', user ? 'User logged in' : 'No user', 'on', window.location.hostname);
+  console.log('Auth state changed:', user ? 'User logged in' : 'No user', 'on', currentHost);
 
   if (user) {
     try {
@@ -170,7 +173,7 @@ onAuthStateChanged(auth, async (user) => {
         success: !!token,
         uid: user.uid,
         email: user.email,
-        hostname: window.location.hostname,
+        currentHost,
         isProduction,
         authDomain: firebaseConfig.authDomain
       });

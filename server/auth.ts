@@ -12,7 +12,7 @@ try {
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
     hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-    customDomain: isProduction ? 'trademate.live' : undefined
+    customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
   });
 
   initializeApp({
@@ -30,13 +30,14 @@ try {
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    const isProduction = req.headers.host === 'trademate.live';
+    const currentHost = req.headers.host;
+    const isProduction = currentHost === 'trademate.live';
 
     console.log('Auth middleware check:', {
-      host: req.headers.host,
+      currentHost,
       isProduction,
       hasAuth: !!req.headers.authorization,
-      customDomain: isProduction ? 'trademate.live' : undefined
+      customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
     });
 
     const authHeader = req.headers.authorization;
@@ -69,17 +70,17 @@ export function setupAuth(app: Express) {
     try {
       const token = authHeader.split('Bearer ')[1];
       console.log('Verifying Firebase token:', {
-        host: req.headers.host,
+        currentHost,
         isProduction,
         tokenLength: token.length,
-        customDomain: isProduction ? 'trademate.live' : undefined
+        customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
       });
 
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
-        email: decodedToken.email,
-        host: req.headers.host,
+        email: decoded.token.email,
+        currentHost,
         isProduction
       });
 
@@ -102,11 +103,11 @@ export function setupAuth(app: Express) {
     } catch (error: any) {
       console.error('Firebase token verification failed:', {
         error,
-        host: req.headers.host,
+        currentHost,
         isProduction,
         errorCode: error.code,
         errorMessage: error.message,
-        customDomain: isProduction ? 'trademate.live' : undefined
+        customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
       });
       return res.status(401).json({ 
         error: "Authentication failed",
