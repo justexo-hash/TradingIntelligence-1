@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --solana-green: 20 241 149;
-    --solana-purple: 156 58 233;
+    --trade-orange: 254 178 111;
+    --trade-red: 250 111 106;
   }
 
   * {
@@ -19,26 +19,26 @@
 
 @layer components {
   .bg-gradient {
-    background: linear-gradient(135deg, rgb(var(--solana-green) / 0.1), rgb(var(--solana-purple) / 0.1));
+    background: linear-gradient(135deg, rgb(var(--trade-orange) / 0.1), rgb(var(--trade-red) / 0.1));
   }
 
   .card-gradient {
     background: linear-gradient(135deg, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.8));
     backdrop-filter: blur(10px);
-    border: 1px solid rgb(var(--solana-green) / 0.2);
+    border: 1px solid rgb(var(--trade-orange) / 0.2);
   }
 
   .text-gradient {
-    background: linear-gradient(to right, rgb(var(--solana-green)), rgb(var(--solana-purple)));
+    background: linear-gradient(to right, rgb(var(--trade-orange)), rgb(var(--trade-red)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .button-gradient {
-    background: linear-gradient(135deg, rgb(var(--solana-green)), rgb(var(--solana-purple)));
+    background: linear-gradient(135deg, rgb(var(--trade-orange)), rgb(var(--trade-red)));
   }
 
   .button-gradient:hover {
-    background: linear-gradient(135deg, rgb(var(--solana-purple)), rgb(var(--solana-green)));
+    background: linear-gradient(135deg, rgb(var(--trade-red)), rgb(var(--trade-orange)));
   }
 }
