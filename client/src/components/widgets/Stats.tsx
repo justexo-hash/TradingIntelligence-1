@@ -7,24 +7,23 @@ interface StatsProps {
   accountBalance?: string;
 }
 
-export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
-  // Initialize default stats
-  const defaultStats = { totalPnl: 0, totalTrades: 0, winningTrades: 0 };
+export default function Stats({ trades = [], accountBalance = "0" }: StatsProps) {
+  // Calculate stats
+  let totalPnl = 0;
+  let totalTrades = trades.length;
+  let winningTrades = 0;
 
-  // Calculate stats only if we have trades
-  const stats = trades && trades.length > 0 
-    ? trades.reduce((acc, trade) => {
-        const pnl = Number(trade.sellAmount || 0) - Number(trade.buyAmount || 0);
-        return {
-          totalPnl: acc.totalPnl + pnl,
-          totalTrades: acc.totalTrades + 1,
-          winningTrades: acc.winningTrades + (pnl > 0 ? 1 : 0),
-        };
-      }, defaultStats)
-    : defaultStats;
+  trades.forEach((trade) => {
+    const sellAmount = Number(trade.sellAmount || 0);
+    const buyAmount = Number(trade.buyAmount || 0);
+    const pnl = sellAmount - buyAmount;
 
-  const winRate = stats.totalTrades > 0
-    ? ((stats.winningTrades / stats.totalTrades) * 100).toFixed(1)
+    totalPnl += pnl;
+    if (pnl > 0) winningTrades++;
+  });
+
+  const winRate = totalTrades > 0 
+    ? ((winningTrades / totalTrades) * 100).toFixed(1)
     : "0.0";
 
   return (
@@ -32,7 +31,7 @@ export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
       <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-r from-[rgb(var(--solana-green))] to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
         <div className="flex items-center">
-          <div className="p-3 bg-[rgb(var(--solana-green))/0.1] rounded-2xl shadow-inner">
+          <div className="p-3 bg-[rgb(var(--solana-green))]/0.1 rounded-2xl shadow-inner">
             <DollarSign className="h-6 w-6 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
@@ -49,7 +48,7 @@ export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
       <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-r from-[rgb(var(--solana-green))] to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
         <div className="flex items-center">
-          <div className="p-3 bg-[rgb(var(--solana-green))/0.1] rounded-2xl shadow-inner">
+          <div className="p-3 bg-[rgb(var(--solana-green))]/0.1 rounded-2xl shadow-inner">
             <TrendingUp className="h-6 w-6 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
@@ -57,7 +56,7 @@ export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
               Net P&L
             </p>
             <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
-              {stats.totalPnl.toFixed(4)} SOL
+              {totalPnl.toFixed(4)} SOL
             </h3>
           </div>
         </div>
@@ -66,7 +65,7 @@ export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
       <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-r from-[rgb(var(--solana-green))] to-transparent opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
         <div className="flex items-center">
-          <div className="p-3 bg-[rgb(var(--solana-green))/0.1] rounded-2xl shadow-inner">
+          <div className="p-3 bg-[rgb(var(--solana-green))]/0.1 rounded-2xl shadow-inner">
             <Target className="h-6 w-6 text-[rgb(var(--solana-green))]" />
           </div>
           <div className="ml-4">
@@ -74,7 +73,7 @@ export default function Stats({ trades, accountBalance = "0" }: StatsProps) {
               Win Rate
             </p>
             <h3 className="text-xl font-bold bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] bg-clip-text text-transparent">
-              {winRate}% ({stats.winningTrades}/{stats.totalTrades})
+              {winRate}% ({winningTrades}/{totalTrades})
             </h3>
           </div>
         </div>
