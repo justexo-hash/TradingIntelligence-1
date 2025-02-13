@@ -6,6 +6,8 @@ import {
   TwitterAuthProvider,
   FacebookAuthProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut 
 } from "firebase/auth";
 
@@ -64,6 +66,41 @@ export const signInWithProvider = async (providerName: string) => {
     }
     if (error.code === 'auth/configuration-not-found') {
       throw new Error("Firebase configuration error. Please check your Firebase setup and authorized domains.");
+    }
+    throw error;
+  }
+};
+
+// Email/Password authentication
+export const signInWithEmail = async (email: string, password: string) => {
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    console.log("Successfully signed in with email");
+    return result.user;
+  } catch (error: any) {
+    console.error("Error signing in with email: ", error);
+    if (error.code === 'auth/user-not-found') {
+      throw new Error("No account exists with this email address.");
+    }
+    if (error.code === 'auth/wrong-password') {
+      throw new Error("Incorrect password.");
+    }
+    throw error;
+  }
+};
+
+export const registerWithEmail = async (email: string, password: string) => {
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    console.log("Successfully registered with email");
+    return result.user;
+  } catch (error: any) {
+    console.error("Error registering with email: ", error);
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error("An account already exists with this email address.");
+    }
+    if (error.code === 'auth/weak-password') {
+      throw new Error("Password should be at least 6 characters long.");
     }
     throw error;
   }

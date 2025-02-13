@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { User as FirebaseUser } from "firebase/auth";
-import { auth, signInWithProvider, signOutUser } from "../lib/firebase";
+import { auth, signInWithProvider, signInWithEmail, registerWithEmail, signOutUser } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
@@ -8,6 +8,8 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   signIn: (provider: string) => Promise<FirebaseUser | null>;
+  signInEmail: (email: string, password: string) => Promise<FirebaseUser | null>;
+  register: (email: string, password: string) => Promise<FirebaseUser | null>;
   signOut: () => Promise<void>;
 };
 
@@ -44,6 +46,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInEmail = async (email: string, password: string) => {
+    try {
+      const user = await signInWithEmail(email, password);
+      return user;
+    } catch (error) {
+      const e = error as Error;
+      setError(e);
+      toast({
+        title: "Sign in failed",
+        description: e.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const register = async (email: string, password: string) => {
+    try {
+      const user = await registerWithEmail(email, password);
+      return user;
+    } catch (error) {
+      const e = error as Error;
+      setError(e);
+      toast({
+        title: "Registration failed",
+        description: e.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const signOut = async () => {
     try {
       await signOutUser();
@@ -65,6 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         signIn,
+        signInEmail,
+        register,
         signOut,
       }}
     >

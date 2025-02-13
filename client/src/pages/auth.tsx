@@ -3,6 +3,10 @@ import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 import { SiGoogle, SiGithub, SiX, SiFacebook } from "react-icons/si";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import {
   Card,
   CardContent,
@@ -10,10 +14,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useState } from "react";
+
+const formSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { user, signIn, isLoading } = useAuth();
+  const { user, signIn, signInEmail, register, isLoading } = useAuth();
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   // Only redirect after all hooks are called
   if (user) {
@@ -23,6 +50,14 @@ export default function AuthPage() {
 
   const handleSignIn = async (provider: string) => {
     await signIn(provider);
+  };
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isRegistering) {
+      await register(values.email, values.password);
+    } else {
+      await signInEmail(values.email, values.password);
+    }
   };
 
   return (
@@ -37,6 +72,67 @@ export default function AuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isRegistering ? (
+                    "Register"
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full"
+                  onClick={() => setIsRegistering(!isRegistering)}
+                >
+                  {isRegistering
+                    ? "Already have an account? Sign in"
+                    : "Don't have an account? Register"}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="relative w-full my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
             <Button
               onClick={() => handleSignIn('google')}
               className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 hover:bg-gray-100"
