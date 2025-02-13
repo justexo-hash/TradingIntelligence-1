@@ -26,14 +26,14 @@ export default function Dashboard() {
   const [showBalanceDialog, setShowBalanceDialog] = useState(false);
   const { user } = useAuth();
 
-  const { data: trades } = useQuery<Trade[]>({
+  const { data: trades = [] } = useQuery<Trade[]>({
     queryKey: [`/api/trades/${user?.id}`],
     enabled: !!user,
   });
 
   // Show balance dialog only for new users with 0 balance
   useEffect(() => {
-    if (user && Number(user.accountBalance) === 0 && !showBalanceDialog) {
+    if (user && Number(user.accountBalance || "0") === 0 && !showBalanceDialog) {
       setShowBalanceDialog(true);
     }
   }, [user]);
@@ -58,7 +58,7 @@ export default function Dashboard() {
                     Update Balance
                   </Button>
                 </DialogTrigger>
-                <BalanceForm currentBalance={user?.accountBalance} />
+                <BalanceForm currentBalance={user?.accountBalance || "0"} />
               </Dialog>
             </div>
           </div>
@@ -74,12 +74,12 @@ export default function Dashboard() {
           </Select>
         </div>
 
-        <Stats trades={trades || []} accountBalance={user?.accountBalance} />
+        <Stats trades={trades} accountBalance={user?.accountBalance || "0"} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
           <Card className="flex-1 overflow-hidden border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg p-6 shadow-lg">
             <TradeCalendar
-              trades={trades || []}
+              trades={trades}
               selectedMonth={selectedMonth}
               onMonthChange={setSelectedMonth}
               filter={filter}
@@ -91,7 +91,7 @@ export default function Dashboard() {
           </Card>
 
           <LineChart 
-            trades={trades || []} 
+            trades={trades}
             accountBalance={user?.accountBalance || "0"}
           />
         </div>
@@ -114,7 +114,7 @@ export default function Dashboard() {
           <BalanceForm 
             isNewUser 
             onClose={() => setShowBalanceDialog(false)} 
-            currentBalance={user?.accountBalance}
+            currentBalance={user?.accountBalance || "0"}
           />
         </Dialog>
       </div>
