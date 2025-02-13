@@ -20,39 +20,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const currentHost = window.location.hostname;
 
   useEffect(() => {
-    console.log('Setting up auth state listener on:', window.location.hostname);
+    console.log('Setting up auth state listener on:', currentHost);
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+      console.log('Auth state changed on', currentHost, ':', user ? 'User logged in' : 'No user');
+
       if (user) {
         try {
+          // Always force a token refresh when auth state changes
           const token = await user.getIdToken(true);
           console.log('Token refreshed on auth state change:', {
             success: !!token,
             uid: user.uid,
-            hostname: window.location.hostname
+            email: user.email,
+            hostname: currentHost,
+            timestamp: new Date().toISOString()
           });
         } catch (error) {
-          console.error('Failed to refresh token:', error);
+          console.error('Failed to refresh token:', {
+            error,
+            uid: user.uid,
+            hostname: currentHost,
+            timestamp: new Date().toISOString()
+          });
         }
       }
+
       setUser(user);
       setIsLoading(false);
     });
 
+    // Cleanup function
     return () => {
-      console.log('Cleaning up auth state listener');
+      console.log('Cleaning up auth state listener on:', currentHost);
       unsubscribe();
     };
-  }, []);
+  }, [currentHost]);
 
   const signIn = async (provider: string) => {
     try {
-      console.log(`Attempting to sign in with ${provider} on ${window.location.hostname}`);
+      console.log(`Attempting to sign in with ${provider} on ${currentHost}`);
       const user = await signInWithProvider(provider);
       if (user) {
-        console.log('Sign in successful, requesting fresh token');
+        console.log('Sign in successful, requesting fresh token on:', currentHost);
         await user.getIdToken(true);
       }
       return user;
@@ -71,10 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInEmail = async (email: string, password: string) => {
     try {
-      console.log('Attempting email sign in on:', window.location.hostname);
+      console.log('Attempting email sign in on:', currentHost);
       const user = await signInWithEmail(email, password);
       if (user) {
-        console.log('Email sign in successful, requesting fresh token');
+        console.log('Email sign in successful, requesting fresh token on:', currentHost);
         await user.getIdToken(true);
       }
       return user;
@@ -93,10 +105,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string) => {
     try {
-      console.log('Attempting registration on:', window.location.hostname);
+      console.log('Attempting registration on:', currentHost);
       const user = await registerWithEmail(email, password);
       if (user) {
-        console.log('Registration successful, requesting fresh token');
+        console.log('Registration successful, requesting fresh token on:', currentHost);
         await user.getIdToken(true);
       }
       return user;
@@ -115,9 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      console.log('Attempting sign out on:', window.location.hostname);
+      console.log('Attempting sign out on:', currentHost);
       await signOutUser();
-      console.log('Sign out successful');
+      console.log('Sign out successful on:', currentHost);
     } catch (error) {
       const e = error as Error;
       console.error('Sign out error:', e);
