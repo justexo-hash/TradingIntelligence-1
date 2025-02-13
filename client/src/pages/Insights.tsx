@@ -17,17 +17,21 @@ export default function Insights() {
   const [expandedInsights, setExpandedInsights] = useState<Record<number, boolean>>({});
 
   const { data: insights, error, isLoading } = useQuery<Insight[]>({
-    queryKey: [`/api/insights/${user?.id}`],
+    queryKey: ["/api/insights"],
     enabled: !!user,
   });
 
   const generateMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error("User not authenticated");
-      return apiRequest("POST", "/api/insights/generate", { userId: user.id });
+      const response = await apiRequest("POST", "/api/insights/generate");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to generate insights");
+      }
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/insights/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/insights"] });
       toast({
         title: "Success",
         description: "New insights have been generated.",
