@@ -78,7 +78,11 @@ export default function Dashboard() {
           </Select>
         </div>
 
-        <Stats trades={trades} accountBalance={user?.accountBalance || "0"} />
+        <Stats 
+          key={user?.accountBalance} 
+          trades={trades} 
+          accountBalance={user?.accountBalance || "0"} 
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
           <Card className="flex-1 overflow-hidden border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg p-6 shadow-lg">

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import {
-  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -27,6 +26,16 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
   const updateBalanceMutation = useMutation({
     mutationFn: async (newBalance: string) => {
       console.log("Updating balance to:", newBalance);
+
+      // Optimistically update the cached user data
+      const currentUser = queryClient.getQueryData(["/api/user"]);
+      if (currentUser) {
+        queryClient.setQueryData(["/api/user"], {
+          ...currentUser,
+          accountBalance: newBalance
+        });
+      }
+
       const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
       if (!response.ok) {
         const error = await response.json();
