@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Line, LineChart as RechartsLineChart, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Card } from "@/components/ui/card";
+import { useBalance } from "@/hooks/use-balance";
 import {
   Select,
   SelectContent,
@@ -15,18 +16,18 @@ type MetricType = "balance" | "pnl" | "winrate";
 
 interface LineChartProps {
   trades: Trade[];
-  accountBalance: string;
 }
 
-export default function LineChart({ trades, accountBalance }: LineChartProps) {
+export default function LineChart({ trades }: LineChartProps) {
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("balance");
+  const { balance } = useBalance();
 
   const chartData = useMemo(() => {
     const sortedTrades = [...trades].sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    let runningBalance = Number(accountBalance);
+    let runningBalance = Number(balance);
     let runningWins = 0;
     let totalTrades = 0;
 
@@ -44,7 +45,7 @@ export default function LineChart({ trades, accountBalance }: LineChartProps) {
         winrate: (runningWins / totalTrades) * 100
       };
     });
-  }, [trades, accountBalance]);
+  }, [trades, balance]);
 
   const getYAxisLabel = () => {
     switch (selectedMetric) {

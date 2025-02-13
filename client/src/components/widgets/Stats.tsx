@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Target } from "lucide-react";
 import type { Trade } from "@shared/schema";
-import { useAuth } from "@/hooks/use-auth";
+import { useBalance } from "@/hooks/use-balance";
 
 interface StatsProps {
   trades: Trade[];
@@ -10,7 +10,7 @@ interface StatsProps {
 export default function Stats({
   trades = [],
 }: StatsProps) {
-  const { user } = useAuth();
+  const { balance } = useBalance();
 
   // Calculate stats
   let totalPnl = 0;
@@ -30,7 +30,7 @@ export default function Stats({
     totalTrades > 0 ? ((winningTrades / totalTrades) * 100).toFixed(1) : "0.0";
 
   // Always ensure accountBalance is treated as a number for display
-  const displayBalance = Number(user?.accountBalance || 0).toFixed(4);
+  const displayBalance = Number(balance || 0).toFixed(4);
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-3">

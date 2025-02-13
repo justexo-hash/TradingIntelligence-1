@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useBalance } from "@/hooks/use-balance";
 import {
   DialogContent,
   DialogHeader,
@@ -21,47 +20,12 @@ interface BalanceFormProps {
 
 export default function BalanceForm({ isNewUser, currentBalance, onClose }: BalanceFormProps) {
   const { toast } = useToast();
-  const [balance, setBalance] = useState(currentBalance || "");
-
-  const updateBalanceMutation = useMutation({
-    mutationFn: async (newBalance: string) => {
-      console.log("Updating balance to:", newBalance);
-
-      const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update balance");
-      }
-      return await response.json();
-    },
-    onSuccess: (updatedUser) => {
-      // Force an immediate cache update with the new user data
-      queryClient.setQueryData(["/api/user"], updatedUser);
-
-      // Invalidate and refetch all related queries
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
-
-      toast({
-        title: "Success",
-        description: "Account balance updated successfully.",
-      });
-
-      if (onClose) onClose();
-    },
-    onError: (error: Error) => {
-      console.error("Balance update error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update balance. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  const { balance, updateBalance, isUpdating } = useBalance();
+  const [inputBalance, setInputBalance] = useState(currentBalance || balance || "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!balance || isNaN(Number(balance))) {
+    if (!inputBalance || isNaN(Number(inputBalance))) {
       toast({
         title: "Error",
         description: "Please enter a valid balance",
@@ -69,8 +33,9 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
       });
       return;
     }
-    console.log("Submitting balance:", balance);
-    updateBalanceMutation.mutate(balance);
+    console.log("Submitting balance:", inputBalance);
+    updateBalance(inputBalance);
+    if (onClose) onClose();
   };
 
   return (
@@ -89,8 +54,8 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
           <Input
             type="number"
             step="0.000001"
-            value={balance}
-            onChange={(e) => setBalance(e.target.value)}
+            value={inputBalance}
+            onChange={(e) => setInputBalance(e.target.value)}
             placeholder="Enter balance in SOL"
             className="w-full"
           />
@@ -106,10 +71,10 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
           )}
           <Button
             type="submit"
-            disabled={updateBalanceMutation.isPending}
+            disabled={isUpdating}
             className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
           >
-            {updateBalanceMutation.isPending && (
+            {isUpdating && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             {isNewUser ? "Start Trading" : "Update Balance"}
