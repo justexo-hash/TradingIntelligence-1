@@ -58,11 +58,11 @@ export default function LineChart({ trades, accountBalance }: LineChartProps) {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold">Performance Chart</h3>
         <Select value={selectedMetric} onValueChange={(v: MetricType) => setSelectedMetric(v)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] bg-black/60 backdrop-blur-sm border-none">
             <SelectValue placeholder="Select metric" />
           </SelectTrigger>
           <SelectContent>
@@ -101,9 +101,10 @@ export default function LineChart({ trades, accountBalance }: LineChartProps) {
             <Line
               type="monotone"
               dataKey={selectedMetric}
-              stroke="rgb(var(--solana-green))"
+              stroke="#00ff99"
               strokeWidth={2}
               dot={false}
+              isAnimationActive={true}
             />
           </RechartsLineChart>
         </ResponsiveContainer>

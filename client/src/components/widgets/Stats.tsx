@@ -7,7 +7,10 @@ interface StatsProps {
   accountBalance?: string;
 }
 
-export default function Stats({ trades = [], accountBalance = "0" }: StatsProps) {
+export default function Stats({
+  trades = [],
+  accountBalance = "0",
+}: StatsProps) {
   // Calculate stats
   let totalPnl = 0;
   let totalTrades = trades.length;
@@ -22,9 +25,8 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
     if (pnl > 0) winningTrades++;
   });
 
-  const winRate = totalTrades > 0 
-    ? ((winningTrades / totalTrades) * 100).toFixed(1)
-    : "0.0";
+  const winRate =
+    totalTrades > 0 ? ((winningTrades / totalTrades) * 100).toFixed(1) : "0.0";
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-3">
@@ -39,7 +41,8 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
               Account Balance
             </p>
             <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
-              {Number(accountBalance || 0).toFixed(4)} <span className="text-[#00ff99] opacity-90">SOL</span>
+              {Number(accountBalance || 0).toFixed(4)}{" "}
+              <span className="text-[#00ff99] opacity-90">SOL</span>
             </h3>
           </div>
         </div>
@@ -56,7 +59,8 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
               Net P&L
             </p>
             <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
-              {totalPnl.toFixed(4)} <span className="text-[#00ff99] opacity-90">SOL</span>
+              {totalPnl.toFixed(4)}{" "}
+              <span className="text-[#00ff99] opacity-90">SOL</span>
             </h3>
           </div>
         </div>
@@ -73,7 +77,10 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
               Win Rate
             </p>
             <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
-              {winRate}% <span className="text-[#00ff99] opacity-90">({winningTrades}/{totalTrades})</span>
+              {winRate}%{" "}
+              <span className="text-[#00ff99] opacity-90">
+                ({winningTrades}/{totalTrades})
+              </span>
             </h3>
           </div>
         </div>
