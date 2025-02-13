@@ -14,7 +14,7 @@ export default function Journal() {
   const { user } = useAuth();
 
   const { data: journals } = useQuery<Journal[]>({
-    queryKey: [`/api/journals/${user?.id}`],
+    queryKey: ["/api/journals"],
     enabled: !!user,
   });
 

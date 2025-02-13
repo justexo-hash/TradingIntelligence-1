@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { apiRequest } from "@/lib/queryClient";
-import { insertJournalSchema } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { insertJournalSchema, type InsertJournal } from "@shared/schema";
 import {
   DialogContent,
   DialogHeader,
@@ -21,11 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import type { InsertJournal } from "@shared/schema";
 
 const folders = [
   { value: "daily", label: "Daily Reviews" },
@@ -42,7 +40,7 @@ export default function JournalForm() {
   const form = useForm<InsertJournal>({
     resolver: zodResolver(insertJournalSchema),
     defaultValues: {
-      userId: user?.id,
+      userId: user?.id || 0,
       title: "",
       content: "",
       folder: "",
@@ -51,22 +49,24 @@ export default function JournalForm() {
 
   const journalMutation = useMutation({
     mutationFn: async (data: InsertJournal) => {
-      return apiRequest("POST", "/api/journals", data);
+      const response = await apiRequest("POST", "/api/journals", data);
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/journals/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/journals"] });
       toast({
         title: "Success",
         description: "Journal entry saved successfully.",
       });
       form.reset();
-      // Find and click the DialogClose button
       const closeButton = document.querySelector('[data-button="close"]');
       if (closeButton instanceof HTMLElement) {
         closeButton.click();
       }
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Failed to save journal entry:", error);
       toast({
         title: "Error",
         description: "Failed to save journal entry. Please try again.",
@@ -76,7 +76,11 @@ export default function JournalForm() {
   });
 
   const onSubmit = (data: InsertJournal) => {
-    journalMutation.mutate(data);
+    console.log("Submitting journal data:", data);
+    journalMutation.mutate({
+      ...data,
+      userId: user?.id || 0,
+    });
   };
 
   return (
@@ -109,7 +113,7 @@ export default function JournalForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Folder</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a folder" />
