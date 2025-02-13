@@ -22,20 +22,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    console.log('Setting up auth state listener');
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+      if (user) {
+        try {
+          // Force token refresh on auth state change
+          const token = await user.getIdToken(true);
+          console.log('Token refreshed on auth state change:', token ? 'Valid token' : 'No token');
+        } catch (error) {
+          console.error('Failed to refresh token:', error);
+        }
+      }
       setUser(user);
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('Cleaning up auth state listener');
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (provider: string) => {
     try {
+      console.log(`Attempting to sign in with ${provider}...`);
       const user = await signInWithProvider(provider);
+      if (user) {
+        console.log('Sign in successful, requesting fresh token');
+        await user.getIdToken(true); // Force token refresh after sign in
+      }
       return user;
     } catch (error) {
       const e = error as Error;
+      console.error('Sign in error:', e);
       setError(e);
       toast({
         title: "Sign in failed",
@@ -48,10 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInEmail = async (email: string, password: string) => {
     try {
+      console.log('Attempting email sign in...');
       const user = await signInWithEmail(email, password);
+      if (user) {
+        console.log('Email sign in successful, requesting fresh token');
+        await user.getIdToken(true);
+      }
       return user;
     } catch (error) {
       const e = error as Error;
+      console.error('Email sign in error:', e);
       setError(e);
       toast({
         title: "Sign in failed",
@@ -64,10 +90,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string) => {
     try {
+      console.log('Attempting registration...');
       const user = await registerWithEmail(email, password);
+      if (user) {
+        console.log('Registration successful, requesting fresh token');
+        await user.getIdToken(true);
+      }
       return user;
     } catch (error) {
       const e = error as Error;
+      console.error('Registration error:', e);
       setError(e);
       toast({
         title: "Registration failed",
@@ -80,9 +112,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Attempting sign out...');
       await signOutUser();
+      console.log('Sign out successful');
     } catch (error) {
       const e = error as Error;
+      console.error('Sign out error:', e);
       setError(e);
       toast({
         title: "Sign out failed",
