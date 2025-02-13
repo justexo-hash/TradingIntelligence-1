@@ -3,7 +3,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { insertTradeSchema, type InsertTrade, type Trade } from "@shared/schema";
+import {
+  insertTradeSchema,
+  type InsertTrade,
+  type Trade,
+} from "@shared/schema";
 import {
   DialogContent,
   DialogHeader,
@@ -29,7 +33,18 @@ import { useAuth } from "@/hooks/use-auth";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useDebouncedCallback } from "use-debounce";
 
-const setupOptions = ["Volume", "Socials", "Shilled in groups", "Art", "Other"];
+const setupOptions = [
+  "Fast Volume",
+  "Good Socials",
+  "Shared in groups",
+  "Good Art",
+  "Narrative / Meta",
+  "Derivative / Correlation of another asset",
+  "Decent MC Entry",
+  "Technical Analysis Indication",
+  "Wallet Tracking",
+  "Other",
+];
 const emotionOptions = [
   "Anxious",
   "Excited",
@@ -38,17 +53,21 @@ const emotionOptions = [
   "Bearish",
   "Relaxed",
   "Indifferent",
+  "Bored",
+  "Annoyed",
+  "Sad",
   "Other",
 ];
 const mistakeOptions = [
-  "No mistakes",
-  "Bought too much",
-  "Bought too little",
-  "Sold too early",
-  "Sold too late",
+  "No Mistakes",
+  "Overbought",
+  "Underbought",
+  "Oversold",
+  "Undersold",
   "Setup Oversight",
   "Distracted",
   "Too little volume",
+  "Trying to be too perfect",
   "Other",
 ];
 
@@ -61,7 +80,9 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
   const { user } = useAuth();
   const [buys, setBuys] = useState([{ amount: "" }]);
   const [sells, setSells] = useState([{ amount: "" }]);
-  const [contractAddress, setContractAddress] = useState(editingTrade?.contractAddress || "");
+  const [contractAddress, setContractAddress] = useState(
+    editingTrade?.contractAddress || "",
+  );
   const [customSetup, setCustomSetup] = useState("");
   const [customEmotion, setCustomEmotion] = useState("");
   const [customMistake, setCustomMistake] = useState("");
@@ -72,7 +93,11 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
     }
   }, 500);
 
-  const { data: tokenInfo, isLoading: isLoadingToken, error: tokenError } = useQuery({
+  const {
+    data: tokenInfo,
+    isLoading: isLoadingToken,
+    error: tokenError,
+  } = useQuery({
     queryKey: [`/api/token/${contractAddress}`],
     enabled: !!contractAddress && contractAddress.length > 0,
     retry: 1,
@@ -104,7 +129,11 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
         userId: user?.id,
       });
       setBuys([{ amount: editingTrade.buyAmount }]);
-      setSells(editingTrade.sellAmount ? [{ amount: editingTrade.sellAmount }] : [{ amount: "" }]);
+      setSells(
+        editingTrade.sellAmount
+          ? [{ amount: editingTrade.sellAmount }]
+          : [{ amount: "" }],
+      );
     }
   }, [editingTrade, form, user?.id]);
 
@@ -139,7 +168,11 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
 
   const updateTradeMutation = useMutation({
     mutationFn: async (data: InsertTrade & { id: number }) => {
-      const response = await apiRequest("PATCH", `/api/trades/${data.id}`, data);
+      const response = await apiRequest(
+        "PATCH",
+        `/api/trades/${data.id}`,
+        data,
+      );
       const result = await response.json();
       return result;
     },
@@ -176,9 +209,15 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
       .reduce((sum, sell) => sum + (Number(sell.amount) || 0), 0)
       .toString();
 
-    const finalSetup = data.setup?.map(s => s === "Other" ? customSetup : s).filter(Boolean) as string[];
-    const finalEmotion = data.emotion?.map(e => e === "Other" ? customEmotion : e).filter(Boolean) as string[];
-    const finalMistakes = data.mistakes?.map(m => m === "Other" ? customMistake : m).filter(Boolean) as string[];
+    const finalSetup = data.setup
+      ?.map((s) => (s === "Other" ? customSetup : s))
+      .filter(Boolean) as string[];
+    const finalEmotion = data.emotion
+      ?.map((e) => (e === "Other" ? customEmotion : e))
+      .filter(Boolean) as string[];
+    const finalMistakes = data.mistakes
+      ?.map((m) => (m === "Other" ? customMistake : m))
+      .filter(Boolean) as string[];
 
     const tradeData: InsertTrade = {
       ...data,
@@ -207,7 +246,10 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-16">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4 pb-16"
+        >
           <FormField
             control={form.control}
             name="contractAddress"
@@ -233,17 +275,21 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                             <div>
                               {tokenInfo.name && (
                                 <p className="font-medium">
-                                  {tokenInfo.name} {tokenInfo.symbol && `(${tokenInfo.symbol})`}
+                                  {tokenInfo.name}{" "}
+                                  {tokenInfo.symbol && `(${tokenInfo.symbol})`}
                                 </p>
                               )}
                               {tokenInfo.description && (
-                                <p className="text-muted-foreground text-xs">{tokenInfo.description}</p>
+                                <p className="text-muted-foreground text-xs">
+                                  {tokenInfo.description}
+                                </p>
                               )}
                             </div>
                           </div>
                           {tokenInfo.marketCap && (
                             <p className="text-xs">
-                              Market Cap: {Number(tokenInfo.marketCap).toFixed(2)} SOL
+                              Market Cap:{" "}
+                              {Number(tokenInfo.marketCap).toFixed(2)} SOL
                             </p>
                           )}
                         </div>
@@ -261,9 +307,12 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                         {tokenError instanceof Error
                           ? tokenError.message
                           : "Could not fetch token information. Please verify the contract address."}
-                        {tokenError instanceof Error && tokenError.message.includes("Rate limit") && (
-                          <p className="text-xs mt-1">Please wait a moment before trying again.</p>
-                        )}
+                        {tokenError instanceof Error &&
+                          tokenError.message.includes("Rate limit") && (
+                            <p className="text-xs mt-1">
+                              Please wait a moment before trying again.
+                            </p>
+                          )}
                       </div>
                     )}
                   </div>
@@ -280,10 +329,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Date</FormLabel>
                 <FormControl>
-                  <DatePicker
-                    date={field.value}
-                    onSelect={field.onChange}
-                  />
+                  <DatePicker date={field.value} onSelect={field.onChange} />
                 </FormControl>
               </FormItem>
             )}
@@ -481,7 +527,10 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
               <FormItem>
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
-                  <Textarea {...field} placeholder="Add any additional notes..." />
+                  <Textarea
+                    {...field}
+                    placeholder="Add any additional notes..."
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -496,10 +545,13 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
             </DialogClose>
             <Button
               type="submit"
-              disabled={createTradeMutation.isPending || updateTradeMutation.isPending}
+              disabled={
+                createTradeMutation.isPending || updateTradeMutation.isPending
+              }
               className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90"
             >
-              {(createTradeMutation.isPending || updateTradeMutation.isPending) && (
+              {(createTradeMutation.isPending ||
+                updateTradeMutation.isPending) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               {editingTrade ? "Update" : "Save"} Trade
