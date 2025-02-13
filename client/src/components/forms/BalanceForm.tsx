@@ -26,18 +26,26 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
 
   const updateBalanceMutation = useMutation({
     mutationFn: async (newBalance: string) => {
+      console.log("Updating balance to:", newBalance);
       const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update balance");
+      }
       const updatedUser = await response.json();
+      console.log("Server response:", updatedUser);
       return updatedUser;
     },
-    onSuccess: () => {
-      // Invalidate and refetch user data to update the balance display
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    onSuccess: (updatedUser) => {
+      // Update all affected queries
+      queryClient.setQueryData(["/api/user"], updatedUser);
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
+
       toast({
         title: "Success",
         description: "Account balance updated successfully.",
       });
+
       if (onClose) onClose();
     },
     onError: (error: Error) => {
@@ -60,6 +68,7 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
       });
       return;
     }
+    console.log("Submitting balance:", balance);
     updateBalanceMutation.mutate(balance);
   };
 

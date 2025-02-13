@@ -27,14 +27,16 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   const { data: trades = [] } = useQuery<Trade[]>({
-    queryKey: [`/api/trades/${user?.id}`],
+    queryKey: ["/api/trades"],
     enabled: !!user,
   });
 
-  // Show balance dialog only for new users with 0 balance
+  // Show balance dialog only for new users with 0 balance and haven't shown it before
   useEffect(() => {
-    if (user && Number(user.accountBalance || "0") === 0 && !showBalanceDialog) {
+    const hasShownBalanceDialog = localStorage.getItem('hasShownBalanceDialog');
+    if (user && Number(user.accountBalance || "0") === 0 && !hasShownBalanceDialog) {
       setShowBalanceDialog(true);
+      localStorage.setItem('hasShownBalanceDialog', 'true');
     }
   }, [user]);
 
