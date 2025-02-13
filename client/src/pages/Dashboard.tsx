@@ -45,7 +45,7 @@ export default function Dashboard() {
       <div className="relative container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold md:text-4xl bg-gradient-to-r from-[rgb(var(--solana-green))] via-[rgb(var(--solana-purple))] to-[rgb(var(--solana-green))] bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold md:text-4xl text-[#39FF14] drop-shadow-[0_0_8px_rgba(57,255,20,0.8)]">
               Dashboard
             </h1>
             <div className="flex items-center gap-4 mt-1">
