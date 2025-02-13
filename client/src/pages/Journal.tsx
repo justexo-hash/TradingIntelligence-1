@@ -50,7 +50,7 @@ export default function Journal() {
 
         <div className="flex-1 space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Daily Journal</h1>
+            <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">Daily Journal</h1>
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-[rgb(var(--solana-green))] to-[rgb(var(--solana-purple))] hover:opacity-90">

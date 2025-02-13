@@ -131,7 +131,7 @@ export default function Trades() {
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold">Trades</h1>
+          <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">Trades</h1>
           <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
             <SelectTrigger className="w-[180px] bg-black/60 backdrop-blur-sm border-none">
               <SelectValue placeholder="Sort by..." />
