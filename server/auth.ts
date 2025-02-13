@@ -23,10 +23,13 @@ export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
-    console.log('Auth middleware environment check:', {
+    const isCustomDomain = req.headers.host === 'trademate.live';
+
+    console.log('Auth middleware check:', {
       NODE_ENV: process.env.NODE_ENV,
       isDevelopment,
       host: req.headers.host,
+      isCustomDomain,
       hasAuth: !!req.headers.authorization
     });
 
@@ -60,13 +63,19 @@ export function setupAuth(app: Express) {
 
     try {
       const token = authHeader.split('Bearer ')[1];
-      console.log('Verifying Firebase token in environment:', isDevelopment ? 'development' : 'production');
+      console.log('Verifying Firebase token:', {
+        environment: isDevelopment ? 'development' : 'production',
+        host: req.headers.host,
+        isCustomDomain,
+        tokenLength: token.length
+      });
 
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
-        email: decodedToken.email,
-        environment: isDevelopment ? 'development' : 'production'
+        email: decoded.token.email,
+        environment: isDevelopment ? 'development' : 'production',
+        host: req.headers.host
       });
 
       // Get or create user in our database
@@ -87,7 +96,11 @@ export function setupAuth(app: Express) {
       req.user = user;
       next();
     } catch (error: any) {
-      console.error('Firebase token verification failed:', error);
+      console.error('Firebase token verification failed:', {
+        error,
+        host: req.headers.host,
+        isCustomDomain
+      });
       return res.status(401).json({ 
         error: "Authentication failed",
         details: error.message

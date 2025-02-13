@@ -16,17 +16,14 @@ const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${projectId}.firebaseapp.com`, // This needs to be updated for custom domain
+  authDomain: window.location.hostname === 'trademate.live' 
+    ? 'trademate.live' 
+    : `${projectId}.firebaseapp.com`,
   projectId: projectId,
   storageBucket: `${projectId}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-
-// For custom domain support
-if (window.location.hostname === 'trademate.live') {
-  firebaseConfig.authDomain = 'trademate.live';
-}
 
 console.log('Firebase Config:', {
   projectId: firebaseConfig.projectId,
