@@ -15,7 +15,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   try {
-    console.log(`Making ${method} request to ${url}`);
+    console.log(`Making ${method} request to ${url} from ${window.location.hostname}`);
     const token = await auth.currentUser?.getIdToken(true); // Force token refresh
     console.log('Token status:', token ? 'Token obtained' : 'No token available');
 
@@ -29,9 +29,12 @@ export async function apiRequest(
       "Authorization": `Bearer ${token}`,
     };
 
-    console.log('Request headers:', { 
+    console.log('Request details:', { 
+      url,
+      method,
       hasContentType: !!data,
-      hasAuthorization: !!headers.Authorization
+      hasAuthorization: !!headers.Authorization,
+      host: window.location.hostname
     });
 
     const res = await fetch(url, {
@@ -41,6 +44,15 @@ export async function apiRequest(
       credentials: "include",
       cache: "no-store", // Prevent caching
     });
+
+    if (res.status === 401) {
+      console.error('Authentication failed:', {
+        status: res.status,
+        statusText: res.statusText,
+        url: res.url,
+        host: window.location.hostname
+      });
+    }
 
     await throwIfResNotOk(res);
     return res;
@@ -57,7 +69,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      console.log('Executing query:', queryKey[0]);
+      console.log('Executing query:', queryKey[0], 'from', window.location.hostname);
       const token = await auth.currentUser?.getIdToken(true); // Force token refresh
       console.log('Query token status:', token ? 'Token obtained' : 'No token available');
 
@@ -74,8 +86,10 @@ export const getQueryFn: <T>(options: {
         "Authorization": `Bearer ${token}`,
       };
 
-      console.log('Query headers:', {
-        hasAuthorization: !!headers.Authorization
+      console.log('Query details:', {
+        url: queryKey[0],
+        hasAuthorization: !!headers.Authorization,
+        host: window.location.hostname
       });
 
       const res = await fetch(queryKey[0] as string, {
@@ -84,9 +98,17 @@ export const getQueryFn: <T>(options: {
         cache: "no-store",
       });
 
-      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-        console.log('Received 401, returning null as configured');
-        return null;
+      if (res.status === 401) {
+        console.error('Query authentication failed:', {
+          status: res.status,
+          statusText: res.statusText,
+          url: res.url,
+          host: window.location.hostname
+        });
+        if (unauthorizedBehavior === "returnNull") {
+          console.log('Received 401, returning null as configured');
+          return null;
+        }
       }
 
       await throwIfResNotOk(res);
