@@ -27,10 +27,6 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
   const updateBalanceMutation = useMutation({
     mutationFn: async (newBalance: string) => {
       const response = await apiRequest("PATCH", "/api/user/balance", { balance: newBalance });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update balance");
-      }
       const updatedUser = await response.json();
       return updatedUser;
     },
@@ -43,6 +39,7 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
       if (onClose) onClose();
     },
     onError: (error: Error) => {
+      console.error("Balance update error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update balance. Please try again.",

@@ -57,7 +57,7 @@ export default function Trades() {
   });
 
   const { data: trades } = useQuery<Trade[]>({
-    queryKey: [`/api/trades/${user?.id}`],
+    queryKey: ["/api/trades"],
     enabled: !!user,
   });
 
@@ -66,7 +66,7 @@ export default function Trades() {
       return apiRequest("DELETE", `/api/trades/${tradeId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
       toast({
         title: "Success",
         description: "Trade deleted successfully.",
@@ -86,7 +86,7 @@ export default function Trades() {
       return apiRequest("POST", "/api/shared-trades", { tradeId, analysis });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/trades/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
       toast({
         title: "Success",
         description: "Trade shared successfully. You earned 10 experience points!",

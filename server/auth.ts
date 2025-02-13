@@ -27,11 +27,22 @@ export function setupAuth(app: Express) {
 
     if (!authHeader?.startsWith('Bearer ')) {
       console.log('No token provided in request headers');
+      // In development, create a mock user for testing
       if (process.env.NODE_ENV === 'development') {
-        // In development, allow requests without authentication for testing
-        console.log('Development mode: Allowing request without authentication');
-        next();
-        return;
+        console.log('Development mode: Creating mock user');
+        const mockUser = await storage.getUserByFirebaseId('dev-user');
+        if (!mockUser) {
+          const newUser = await storage.createUser({
+            firebaseId: 'dev-user',
+            email: 'dev@example.com',
+            displayName: 'Dev User',
+            photoURL: '',
+          });
+          req.user = newUser;
+        } else {
+          req.user = mockUser;
+        }
+        return next();
       }
       return res.status(401).json({ error: "No token provided" });
     }
