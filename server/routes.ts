@@ -108,14 +108,14 @@ export function registerRoutes(app: Express) {
 
       // For successful responses, return relevant token data
       const tokenData = {
-        name: data.name,
-        symbol: data.symbol,
-        description: data.description,
-        image: data.image_uri,
-        marketCap: data.usd_market_cap || data.market_cap, // Prioritize USD market cap
-        totalSupply: data.total_supply,
+        name: data.name || null,
+        symbol: data.symbol || null,
+        image: data.image_uri || null,
+        usdMarketCap: data.usd_market_cap || null,
+        solMarketCap: data.market_cap || null,
       };
 
+      console.log("Processed token data:", tokenData);
       res.json(tokenData);
     } catch (error) {
       console.error("Error fetching token info:", error);
