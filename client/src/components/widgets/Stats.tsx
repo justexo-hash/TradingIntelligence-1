@@ -38,8 +38,8 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Account Balance
             </p>
-            <h3 className="text-xl font-bold text-[rgb(var(--solana-green))] [text-shadow:0_0_10px_rgb(var(--solana-green))]">
-              {Number(accountBalance || 0).toFixed(4)} SOL
+            <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
+              {Number(accountBalance || 0).toFixed(4)} <span className="text-[#00ff99] opacity-90">SOL</span>
             </h3>
           </div>
         </div>
@@ -55,8 +55,8 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Net P&L
             </p>
-            <h3 className="text-xl font-bold text-[rgb(var(--solana-green))] [text-shadow:0_0_10px_rgb(var(--solana-green))]">
-              {totalPnl.toFixed(4)} SOL
+            <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
+              {totalPnl.toFixed(4)} <span className="text-[#00ff99] opacity-90">SOL</span>
             </h3>
           </div>
         </div>
@@ -72,8 +72,8 @@ export default function Stats({ trades = [], accountBalance = "0" }: StatsProps)
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Win Rate
             </p>
-            <h3 className="text-xl font-bold text-[rgb(var(--solana-green))] [text-shadow:0_0_10px_rgb(var(--solana-green))]">
-              {winRate}% ({winningTrades}/{totalTrades})
+            <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
+              {winRate}% <span className="text-[#00ff99] opacity-90">({winningTrades}/{totalTrades})</span>
             </h3>
           </div>
         </div>
