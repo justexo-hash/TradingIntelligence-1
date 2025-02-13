@@ -28,6 +28,9 @@ export default function Stats({
   const winRate =
     totalTrades > 0 ? ((winningTrades / totalTrades) * 100).toFixed(1) : "0.0";
 
+  // Always ensure accountBalance is treated as a number for display
+  const displayBalance = Number(accountBalance || 0).toFixed(4);
+
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-3">
       <Card className="p-4 border-none bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,163,0.2)] relative overflow-hidden group">
@@ -41,7 +44,7 @@ export default function Stats({
               Account Balance
             </p>
             <h3 className="text-xl font-bold text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
-              {Number(accountBalance || 0).toFixed(4)}{" "}
+              {displayBalance}{" "}
               <span className="text-[#00ff99] opacity-90">SOL</span>
             </h3>
           </div>

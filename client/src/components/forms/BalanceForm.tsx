@@ -41,6 +41,10 @@ export default function BalanceForm({ isNewUser, currentBalance, onClose }: Bala
       queryClient.setQueryData(["/api/user"], updatedUser);
       queryClient.invalidateQueries({ queryKey: ["/api/trades"] });
 
+      // Force an immediate refetch of queries
+      queryClient.refetchQueries({ queryKey: ["/api/user"] });
+      queryClient.refetchQueries({ queryKey: ["/api/trades"] });
+
       toast({
         title: "Success",
         description: "Account balance updated successfully.",

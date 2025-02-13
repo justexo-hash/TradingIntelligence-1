@@ -26,9 +26,11 @@ export default function Dashboard() {
   const [showBalanceDialog, setShowBalanceDialog] = useState(false);
   const { user } = useAuth();
 
+  // Always fetch latest trades with refetch on mount
   const { data: trades = [] } = useQuery<Trade[]>({
     queryKey: ["/api/trades"],
     enabled: !!user,
+    refetchOnMount: true,
   });
 
   // Show balance dialog only for new users with 0 balance and haven't shown it before
@@ -60,7 +62,7 @@ export default function Dashboard() {
                     Update Balance
                   </Button>
                 </DialogTrigger>
-                <BalanceForm currentBalance={user?.accountBalance || "0"} />
+                <BalanceForm key={user?.accountBalance} currentBalance={user?.accountBalance || "0"} />
               </Dialog>
             </div>
           </div>
