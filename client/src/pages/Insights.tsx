@@ -16,7 +16,7 @@ export default function Insights() {
   const { user } = useAuth();
   const [expandedInsights, setExpandedInsights] = useState<Record<number, boolean>>({});
 
-  const { data: insights } = useQuery<Insight[]>({
+  const { data: insights, error, isLoading } = useQuery<Insight[]>({
     queryKey: [`/api/insights/${user?.id}`],
     enabled: !!user,
   });
@@ -49,6 +49,24 @@ export default function Insights() {
     }));
   };
 
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="text-center text-red-500">
+          Failed to load insights. Please try refreshing the page.
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-7xl flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
@@ -70,7 +88,7 @@ export default function Insights() {
       <ScrollArea className="h-[calc(100vh-10rem)]">
         <div className="grid gap-4">
           {insights?.map((insight) => (
-            <Card key={insight.id} className="p-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-none">
+            <Card key={insight.id} className="p-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-none relative">
               <div className="flex justify-between items-start">
                 <p className="text-sm text-muted-foreground">
                   {new Date(insight.date).toLocaleDateString()}
@@ -97,10 +115,15 @@ export default function Insights() {
                 {formatInsightContent(insight.content)}
               </div>
               {!expandedInsights[insight.id] && insight.content.length > 150 && (
-                <div className="h-8 bg-gradient-to-b from-transparent to-background absolute bottom-0 left-0 right-0" />
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-b from-transparent to-background" />
               )}
             </Card>
           ))}
+          {insights?.length === 0 && (
+            <div className="text-center text-muted-foreground">
+              No insights available. Generate your first insight using the button above.
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
