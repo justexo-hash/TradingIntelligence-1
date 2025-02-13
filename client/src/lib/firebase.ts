@@ -1,5 +1,13 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  GithubAuthProvider,
+  TwitterAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+  signOut 
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,21 +21,44 @@ const firebaseConfig = {
 // Initialize Firebase with error handling
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
-// Add scopes for additional Google permissions if needed
+// Initialize providers
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+const twitterProvider = new TwitterAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+
+// Add scopes for additional permissions if needed
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
-export const signInWithGoogle = async () => {
+// Generic sign in function that takes a provider
+export const signInWithProvider = async (providerName: string) => {
   try {
-    console.log("Attempting to sign in with Google...");
-    console.log("Current authDomain:", firebaseConfig.authDomain);
-    const result = await signInWithPopup(auth, googleProvider);
-    console.log("Successfully signed in with Google");
+    console.log(`Attempting to sign in with ${providerName}...`);
+    let provider;
+    switch (providerName.toLowerCase()) {
+      case 'google':
+        provider = googleProvider;
+        break;
+      case 'github':
+        provider = githubProvider;
+        break;
+      case 'twitter':
+        provider = twitterProvider;
+        break;
+      case 'facebook':
+        provider = facebookProvider;
+        break;
+      default:
+        throw new Error('Unsupported provider');
+    }
+
+    const result = await signInWithPopup(auth, provider);
+    console.log("Successfully signed in");
     return result.user;
   } catch (error: any) {
-    console.error("Error signing in with Google: ", error);
+    console.error(`Error signing in with ${providerName}: `, error);
     if (error.code === 'auth/unauthorized-domain') {
       throw new Error(`Please add ${window.location.hostname} to Firebase Console's Authorized Domains list.`);
     }

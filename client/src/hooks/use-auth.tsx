@@ -1,13 +1,13 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { User as FirebaseUser } from "firebase/auth";
-import { auth, signInWithGoogle, signOutUser } from "../lib/firebase";
+import { auth, signInWithProvider, signOutUser } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
   user: FirebaseUser | null;
   isLoading: boolean;
   error: Error | null;
-  signIn: () => Promise<FirebaseUser | null>;
+  signIn: (provider: string) => Promise<FirebaseUser | null>;
   signOut: () => Promise<void>;
 };
 
@@ -28,9 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async () => {
+  const signIn = async (provider: string) => {
     try {
-      const user = await signInWithGoogle();
+      const user = await signInWithProvider(provider);
       return user;
     } catch (error) {
       const e = error as Error;
