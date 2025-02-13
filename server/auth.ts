@@ -22,20 +22,19 @@ try {
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    console.log('Auth middleware - Request origin:', req.headers.origin);
-    console.log('Auth middleware - Headers:', {
-      authorization: !!req.headers.authorization,
+    console.log('Auth middleware - Request details:', {
+      origin: req.headers.origin,
       host: req.headers.host,
-      origin: req.headers.origin
+      hasAuth: !!req.headers.authorization,
+      isDev: process.env.NODE_ENV === 'development'
     });
 
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
-      console.log('No token provided in request headers');
-      // Only use mock user in development
+      // Development mode handling
       if (process.env.NODE_ENV === 'development') {
-        console.log('Development mode: Creating mock user');
+        console.log('Development mode: Using mock user');
         const mockUser = await storage.getUserByFirebaseId('dev-user');
         if (!mockUser) {
           const newUser = await storage.createUser({
@@ -50,12 +49,18 @@ export function setupAuth(app: Express) {
         }
         return next();
       }
-      return res.status(401).json({ error: "No authentication token provided" });
+
+      // Production error handling
+      return res.status(401).json({ 
+        error: "No authentication token provided",
+        details: "Please sign in to access this resource"
+      });
     }
 
     try {
       const token = authHeader.split('Bearer ')[1];
       console.log('Verifying Firebase token...');
+
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
@@ -79,18 +84,17 @@ export function setupAuth(app: Express) {
 
       req.user = user;
       next();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Firebase token verification failed:', error);
       return res.status(401).json({ 
-        error: "Invalid authentication token",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: "Authentication failed",
+        details: error.message
       });
     }
   });
 
   // Get current user endpoint
   app.get("/api/user", async (req: any, res: any) => {
-    console.log('GET /api/user - Current user:', req.user ? { id: req.user.id, email: req.user.email } : 'None');
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
