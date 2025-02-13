@@ -13,10 +13,12 @@ import {
 
 // Initialize Firebase configuration
 const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+const isProd = import.meta.env.PROD === 'true' || import.meta.env.NODE_ENV === 'production';
+const currentHost = window.location.hostname;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: window.location.hostname === 'trademate.live' 
+  authDomain: currentHost === 'trademate.live' 
     ? 'trademate.live' 
     : `${projectId}.firebaseapp.com`,
   projectId: projectId,
@@ -28,9 +30,10 @@ const firebaseConfig = {
 console.log('Firebase Config:', {
   projectId: firebaseConfig.projectId,
   authDomain: firebaseConfig.authDomain,
-  currentHostname: window.location.hostname,
+  currentHost,
   hasApiKey: !!firebaseConfig.apiKey,
-  hasAppId: !!firebaseConfig.appId
+  hasAppId: !!firebaseConfig.appId,
+  environment: isProd ? 'production' : 'development'
 });
 
 // Initialize Firebase
@@ -111,6 +114,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 export const registerWithEmail = async (email: string, password: string) => {
   try {
+    console.log('Attempting registration on:', window.location.hostname);
     const result = await createUserWithEmailAndPassword(auth, email, password);
     console.log("Successfully registered with email");
     const token = await result.user.getIdToken(true);

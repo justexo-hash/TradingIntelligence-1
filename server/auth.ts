@@ -6,6 +6,12 @@ import { storage } from "./storage";
 
 // Initialize Firebase Admin with service account
 try {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true';
+  console.log('Initializing Firebase Admin:', {
+    environment: isProd ? 'production' : 'development',
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID
+  });
+
   initializeApp({
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     credential: cert({
@@ -14,7 +20,7 @@ try {
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
   });
-  console.log('Firebase Admin initialized successfully with project:', process.env.VITE_FIREBASE_PROJECT_ID);
+  console.log('Firebase Admin initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase Admin:', error);
 }
@@ -22,12 +28,13 @@ try {
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const isProd = process.env.NODE_ENV === 'production' || process.env.PROD === 'true';
     const isCustomDomain = req.headers.host === 'trademate.live';
 
     console.log('Auth middleware check:', {
       NODE_ENV: process.env.NODE_ENV,
-      isDevelopment,
+      PROD: process.env.PROD,
+      isProd,
       host: req.headers.host,
       isCustomDomain,
       hasAuth: !!req.headers.authorization
@@ -35,9 +42,9 @@ export function setupAuth(app: Express) {
 
     const authHeader = req.headers.authorization;
 
+    // Only allow development mode bypass on non-production
     if (!authHeader?.startsWith('Bearer ')) {
-      // Development mode handling
-      if (isDevelopment) {
+      if (!isProd) {
         console.log('Development mode: Using mock user');
         const mockUser = await storage.getUserByFirebaseId('dev-user');
         if (!mockUser) {
@@ -54,7 +61,6 @@ export function setupAuth(app: Express) {
         return next();
       }
 
-      // Production error handling
       return res.status(401).json({ 
         error: "No authentication token provided",
         details: "Please sign in to access this resource"
@@ -64,7 +70,7 @@ export function setupAuth(app: Express) {
     try {
       const token = authHeader.split('Bearer ')[1];
       console.log('Verifying Firebase token:', {
-        environment: isDevelopment ? 'development' : 'production',
+        environment: isProd ? 'production' : 'development',
         host: req.headers.host,
         isCustomDomain,
         tokenLength: token.length
@@ -73,12 +79,11 @@ export function setupAuth(app: Express) {
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
-        email: decoded.token.email,
-        environment: isDevelopment ? 'development' : 'production',
+        email: decodedToken.email,
+        environment: isProd ? 'production' : 'development',
         host: req.headers.host
       });
 
-      // Get or create user in our database
       let user = await storage.getUserByFirebaseId(decodedToken.uid);
       console.log('Database user lookup result:', user ? 'Found' : 'Not found');
 
