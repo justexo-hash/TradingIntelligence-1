@@ -6,12 +6,6 @@ import { storage } from "./storage";
 
 // Initialize Firebase Admin with service account
 try {
-  console.log('Initializing Firebase Admin:', {
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-    hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL
-  });
-
   if (!process.env.FIREBASE_PRIVATE_KEY) {
     throw new Error('FIREBASE_PRIVATE_KEY environment variable is missing');
   }
@@ -24,9 +18,7 @@ try {
     throw new Error('VITE_FIREBASE_PROJECT_ID environment variable is missing');
   }
 
-  // Ensure proper formatting of private key by:
-  // 1. Replacing escaped newlines with actual newlines
-  // 2. Removing any extra quotes that might have been added
+  // Ensure proper formatting of private key
   const privateKey = process.env.FIREBASE_PRIVATE_KEY
     .replace(/\\n/g, '\n')
     .replace(/^["']|["']$/g, '');
@@ -39,34 +31,16 @@ try {
     }),
   };
 
-  console.log('Attempting to initialize Firebase Admin with config:', {
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKeyLength: privateKey.length,
-    hasValidPrivateKey: privateKey.includes('BEGIN PRIVATE KEY') && privateKey.includes('END PRIVATE KEY')
-  });
-
   initializeApp(adminConfig);
   console.log('Firebase Admin initialized successfully');
 } catch (error: any) {
-  console.error('Error initializing Firebase Admin:', {
-    error: error.message,
-    stack: error.stack,
-    code: error.code,
-  });
-  throw error; // Re-throw to prevent silent failures
+  console.error('Error initializing Firebase Admin:', error);
+  throw error;
 }
 
 export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    console.log('Auth middleware check:', {
-      host: req.headers.host,
-      hasAuth: !!req.headers.authorization,
-      method: req.method,
-      path: req.path
-    });
-
     // Only bypass auth in development
     if (!req.headers.authorization?.startsWith('Bearer ')) {
       if (process.env.NODE_ENV !== 'production') {
@@ -87,10 +61,7 @@ export function setupAuth(app: Express) {
           return next();
         } catch (error) {
           console.error('Error setting up mock user:', error);
-          return res.status(500).json({ 
-            error: "Internal server error",
-            details: "Error setting up development environment"
-          });
+          return res.status(500).json({ error: "Internal server error" });
         }
       }
 
@@ -102,72 +73,25 @@ export function setupAuth(app: Express) {
 
     try {
       const token = req.headers.authorization.split('Bearer ')[1];
-      console.log('Verifying Firebase token:', {
-        host: req.headers.host,
-        tokenLength: token.length,
-        path: req.path
-      });
-
-      const decodedToken = await getAuth().verifyIdToken(token, true);
-      console.log('Token verified successfully:', {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        host: req.headers.host,
-        path: req.path
-      });
+      const decodedToken = await getAuth().verifyIdToken(token);
 
       let user = await storage.getUserByFirebaseId(decodedToken.uid);
-      console.log('Database user lookup result:', {
-        found: !!user,
-        uid: decodedToken.uid,
-        path: req.path
-      });
 
       if (!user) {
-        console.log('Creating new user for Firebase UID:', decodedToken.uid);
-        try {
-          user = await storage.createUser({
-            firebaseId: decodedToken.uid,
-            email: decodedToken.email || '',
-            displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-            photoURL: decoded.picture || '',
-          });
-          console.log('New user created:', { 
-            id: user.id, 
-            email: user.email,
-            firebaseId: user.firebaseId 
-          });
-        } catch (error) {
-          console.error('Error creating new user:', error);
-          return res.status(500).json({ 
-            error: "Internal server error",
-            details: "Error creating user account"
-          });
-        }
+        user = await storage.createUser({
+          firebaseId: decodedToken.uid,
+          email: decodedToken.email || '',
+          displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
+          photoURL: decodedToken.picture || '',
+        });
       }
 
       req.user = user;
       next();
     } catch (error: any) {
-      console.error('Firebase token verification failed:', {
-        error,
-        host: req.headers.host,
-        errorCode: error.code,
-        errorMessage: error.message,
-        path: req.path
-      });
-
-      let statusCode = 401;
-      let errorMessage = "Authentication failed";
-
-      if (error.code === 'auth/id-token-expired') {
-        errorMessage = "Authentication token has expired. Please sign in again.";
-      } else if (error.code === 'auth/invalid-credential') {
-        errorMessage = "Invalid credentials. Please sign in again.";
-      }
-
-      return res.status(statusCode).json({ 
-        error: errorMessage,
+      console.error('Firebase token verification failed:', error);
+      return res.status(401).json({ 
+        error: "Authentication failed",
         details: error.message
       });
     }

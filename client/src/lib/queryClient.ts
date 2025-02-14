@@ -13,17 +13,10 @@ async function getAuthToken(forceRefresh = false): Promise<string | null> {
   try {
     const user = auth.currentUser;
     if (!user) {
-      console.log('No user logged in, returning null token');
       return null;
     }
 
     const token = await user.getIdToken(forceRefresh);
-    console.log('Token obtained:', {
-      success: !!token,
-      uid: user.uid,
-      tokenLength: token?.length,
-      host: window.location.hostname
-    });
     return token;
   } catch (error) {
     console.error('Failed to get auth token:', error);
@@ -36,28 +29,13 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const isDevelopment = !import.meta.env.PROD;
-
   try {
-    console.log(`Making ${method} request to ${url}`, {
-      host: window.location.hostname,
-      isDevelopment
-    });
-
-    // First try without force refresh
-    let token = await getAuthToken(false);
+    const token = await getAuthToken();
 
     const headers: Record<string, string> = {
       ...(data ? { "Content-Type": "application/json" } : {}),
       ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     };
-
-    console.log('Initial request details:', { 
-      url,
-      method,
-      hasToken: !!token,
-      host: window.location.hostname
-    });
 
     let res = await fetch(url, {
       method,
@@ -67,15 +45,11 @@ export async function apiRequest(
       cache: "no-store",
     });
 
-    // If unauthorized, try one more time with forced token refresh
+    // If unauthorized and we have a token, try one more time with forced refresh
     if (res.status === 401 && token) {
-      console.log('Request failed with 401, attempting token refresh');
-      token = await getAuthToken(true);
-
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-        console.log('Retrying request with new token');
-
+      const newToken = await getAuthToken(true);
+      if (newToken) {
+        headers.Authorization = `Bearer ${newToken}`;
         res = await fetch(url, {
           method,
           headers,
@@ -100,23 +74,11 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      console.log('Executing query:', {
-        key: queryKey[0],
-        host: window.location.hostname
-      });
-
-      // First try without force refresh
-      let token = await getAuthToken(false);
+      const token = await getAuthToken();
 
       const headers: Record<string, string> = token
         ? { "Authorization": `Bearer ${token}` }
         : {};
-
-      console.log('Query details:', {
-        url: queryKey[0],
-        hasToken: !!token,
-        host: window.location.hostname
-      });
 
       let res = await fetch(queryKey[0] as string, {
         headers,
@@ -126,13 +88,9 @@ export const getQueryFn: <T>(options: {
 
       // If unauthorized and we have a token, try one more time with forced refresh
       if (res.status === 401 && token) {
-        console.log('Query failed with 401, attempting token refresh');
-        token = await getAuthToken(true);
-
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-          console.log('Retrying query with new token');
-
+        const newToken = await getAuthToken(true);
+        if (newToken) {
+          headers.Authorization = `Bearer ${newToken}`;
           res = await fetch(queryKey[0] as string, {
             headers,
             credentials: "include",
@@ -141,7 +99,6 @@ export const getQueryFn: <T>(options: {
         }
 
         if (res.status === 401 && unauthorizedBehavior === "returnNull") {
-          console.log('Authentication failed after refresh, returning null');
           return null;
         }
       }
@@ -164,10 +121,8 @@ export const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 5,
       retry: (failureCount, error) => {
         if (error instanceof Error && error.message.startsWith("401:")) {
-          console.log('Not retrying auth error');
           return false;
         }
-        console.log(`Retrying query (attempt ${failureCount + 1}/3)`);
         return failureCount < 3;
       },
     },
