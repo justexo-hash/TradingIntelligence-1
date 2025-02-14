@@ -20,11 +20,11 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
 
   const totalTrades = trades.length;
   const profitableTrades = trades.filter(
-    (trade) => Number(trade.sellAmount) - Number(trade.buyAmount) > 0
+    (trade) => Number(trade.sellAmount) - Number(trade.buyAmount) > 0,
   ).length;
   const totalPnL = trades.reduce(
     (sum, trade) => sum + (Number(trade.sellAmount) - Number(trade.buyAmount)),
-    0
+    0,
   );
 
   const getTokenDisplayName = (trade: Trade): string => {
@@ -88,12 +88,17 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
         <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))]/0.1">
           <p className="text-sm text-muted-foreground">Win Rate</p>
           <p className="text-2xl font-bold text-gradient">
-            {totalTrades ? ((profitableTrades / totalTrades) * 100).toFixed(1) : "0"}%
+            {totalTrades
+              ? ((profitableTrades / totalTrades) * 100).toFixed(1)
+              : "0"}
+            %
           </p>
         </div>
         <div className="p-4 rounded-lg bg-[rgb(var(--solana-green))]/0.1">
           <p className="text-sm text-muted-foreground">Net P&L</p>
-          <p className="text-2xl font-bold text-gradient">{totalPnL.toFixed(4)} SOL</p>
+          <p className="text-2xl font-bold text-gradient">
+            {totalPnL.toFixed(4)} SOL
+          </p>
         </div>
       </div>
 
@@ -107,7 +112,12 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
                   <Button
                     variant="link"
                     className="p-0 h-auto font-semibold text-lg hover:text-[rgb(var(--solana-green))]"
-                    onClick={() => window.open(`https://pump.fun/token/${trade.contractAddress}`, '_blank')}
+                    onClick={() =>
+                      window.open(
+                        `https://pump.fun/coin/${trade.contractAddress}`,
+                        "_blank",
+                      )
+                    }
                   >
                     {getTokenDisplayName(trade)}
                   </Button>
@@ -126,7 +136,10 @@ const DayDetails = ({ date, trades, onClose }: DayDetailsProps) => {
                         : "text-red-500"
                     }
                   >
-                    {(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)} SOL
+                    {(
+                      Number(trade.sellAmount) - Number(trade.buyAmount)
+                    ).toFixed(4)}{" "}
+                    SOL
                   </span>
                 </p>
               </div>
