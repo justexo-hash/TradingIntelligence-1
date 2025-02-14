@@ -13,19 +13,20 @@ import {
 
 // Initialize Firebase configuration
 const currentHost = window.location.hostname;
-const isProduction = process.env.CUSTOM_DOMAIN === 'true';
+const isCustomDomain = currentHost === 'trademate.live';
 
 console.log('Firebase initialization:', {
   currentHost,
-  isProduction,
+  isCustomDomain,
   hasApiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  customDomain: 'trademate.live'
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID
 });
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: isProduction ? 'trademate.live' : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  authDomain: isCustomDomain 
+    ? 'trademate.live' 
+    : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -55,7 +56,7 @@ export const signInWithProvider = async (providerName: string) => {
   try {
     console.log(`Attempting to sign in with ${providerName}`, {
       currentHost,
-      isProduction,
+      isCustomDomain,
       authDomain: firebaseConfig.authDomain
     });
 
@@ -72,9 +73,7 @@ export const signInWithProvider = async (providerName: string) => {
       success: !!token,
       uid: result.user.uid,
       email: result.user.email,
-      currentHost,
-      isProduction,
-      authDomain: firebaseConfig.authDomain
+      host: currentHost
     });
 
     return result.user;
@@ -84,8 +83,7 @@ export const signInWithProvider = async (providerName: string) => {
       code: error.code,
       message: error.message,
       currentHost,
-      isProduction,
-      authDomain: firebaseConfig.authDomain
+      isCustomDomain
     });
 
     if (error.code === 'auth/unauthorized-domain') {
@@ -105,8 +103,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     console.log("Token obtained after email sign in:", {
       success: !!token,
       uid: result.user.uid,
-      currentHost,
-      isProduction
+      host: currentHost
     });
     return result.user;
   } catch (error: any) {
@@ -132,8 +129,7 @@ export const registerWithEmail = async (email: string, password: string) => {
     console.log("Token obtained after registration:", {
       success: !!token,
       uid: result.user.uid,
-      currentHost,
-      isProduction
+      host: currentHost
     });
     return result.user;
   } catch (error: any) {
@@ -165,8 +161,7 @@ let tokenRefreshTimeout: number | null = null;
 onAuthStateChanged(auth, async (user) => {
   console.log('Auth state changed:', {
     status: user ? 'User logged in' : 'No user',
-    host: currentHost,
-    isProduction
+    host: currentHost
   });
 
   if (user) {
@@ -177,8 +172,7 @@ onAuthStateChanged(auth, async (user) => {
         success: !!token,
         uid: user.uid,
         email: user.email,
-        currentHost,
-        isProduction
+        host: currentHost
       });
 
       // Set up periodic token refresh (every 30 minutes)
@@ -191,8 +185,7 @@ onAuthStateChanged(auth, async (user) => {
           console.log('Periodic token refresh successful:', {
             success: !!newToken,
             uid: user.uid,
-            currentHost,
-            isProduction
+            host: currentHost
           });
         } catch (error) {
           console.error('Periodic token refresh failed:', error);

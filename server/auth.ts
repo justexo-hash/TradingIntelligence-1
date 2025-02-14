@@ -6,13 +6,12 @@ import { storage } from "./storage";
 
 // Initialize Firebase Admin with service account
 try {
-  const isProduction = process.env.CUSTOM_DOMAIN === 'true';
+  const isCustomDomain = process.env.CUSTOM_DOMAIN === 'true';
   console.log('Initializing Firebase Admin:', {
-    isProduction,
+    isCustomDomain,
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-    customDomain: 'trademate.live'
+    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL
   });
 
   initializeApp({
@@ -31,11 +30,11 @@ export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
     const currentHost = req.headers.host;
-    const isProduction = process.env.CUSTOM_DOMAIN === 'true';
+    const isCustomDomain = currentHost === 'trademate.live';
 
     console.log('Auth middleware check:', {
       currentHost,
-      isProduction,
+      isCustomDomain,
       hasAuth: !!req.headers.authorization,
       method: req.method,
       path: req.path
@@ -43,9 +42,9 @@ export function setupAuth(app: Express) {
 
     const authHeader = req.headers.authorization;
 
-    // Only allow development mode bypass on non-production
+    // Only allow development mode bypass on non-custom domain
     if (!authHeader?.startsWith('Bearer ')) {
-      if (!isProduction) {
+      if (!isCustomDomain) {
         console.log('Development mode: Using mock user');
         const mockUser = await storage.getUserByFirebaseId('dev-user');
         if (!mockUser) {
@@ -78,7 +77,7 @@ export function setupAuth(app: Express) {
       const token = authHeader.split('Bearer ')[1];
       console.log('Verifying Firebase token:', {
         currentHost,
-        isProduction,
+        isCustomDomain,
         tokenLength: token.length,
         path: req.path
       });
@@ -87,8 +86,7 @@ export function setupAuth(app: Express) {
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        currentHost,
-        isProduction,
+        host: currentHost,
         path: req.path
       });
 
@@ -120,7 +118,7 @@ export function setupAuth(app: Express) {
       console.error('Firebase token verification failed:', {
         error,
         currentHost,
-        isProduction,
+        isCustomDomain,
         errorCode: error.code,
         errorMessage: error.message,
         path: req.path
@@ -133,7 +131,7 @@ export function setupAuth(app: Express) {
   });
 
   // Get current user endpoint
-  app.get("/api/user", async (req: any, res: any) => {
+  app.get("/api/user", (req: any, res: any) => {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
