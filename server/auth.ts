@@ -12,7 +12,7 @@ try {
     projectId: process.env.VITE_FIREBASE_PROJECT_ID,
     hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
     hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-    customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
+    customDomain: 'trademate.live'
   });
 
   initializeApp({
@@ -37,7 +37,7 @@ export function setupAuth(app: Express) {
       currentHost,
       isProduction,
       hasAuth: !!req.headers.authorization,
-      customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
+      customDomain: 'trademate.live'
     });
 
     const authHeader = req.headers.authorization;
@@ -73,13 +73,13 @@ export function setupAuth(app: Express) {
         currentHost,
         isProduction,
         tokenLength: token.length,
-        customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
+        customDomain: 'trademate.live'
       });
 
       const decodedToken = await getAuth().verifyIdToken(token);
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
-        email: decoded.token.email,
+        email: decodedToken.email,
         currentHost,
         isProduction
       });
@@ -107,7 +107,7 @@ export function setupAuth(app: Express) {
         isProduction,
         errorCode: error.code,
         errorMessage: error.message,
-        customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
+        customDomain: 'trademate.live'
       });
       return res.status(401).json({ 
         error: "Authentication failed",

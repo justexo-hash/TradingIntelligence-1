@@ -20,14 +20,12 @@ console.log('Firebase initialization:', {
   isProduction,
   hasApiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  customDomain: isProduction ? 'trademate.live' : 'trading-intelligence-1-kroleonleon.replit.app'
+  customDomain: 'trademate.live'
 });
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: isProduction 
-    ? 'trademate.live' 
-    : 'trading-intelligence-1-kroleonleon.replit.app',
+  authDomain: 'trademate.live',
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
