@@ -1,6 +1,10 @@
 import { Express } from "express";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { storage } from "./storage";
+
+// In-memory token store (should be replaced with database storage in production)
+const resetTokens = new Map<string, { email: string; expires: Date }>();
 
 export function setupAuth(app: Express) {
   // Check session
@@ -70,6 +74,63 @@ export function setupAuth(app: Express) {
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Forgot Password
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        // Return success even if user doesn't exist to prevent email enumeration
+        return res.json({ message: "If an account exists with that email, a password reset link will be sent." });
+      }
+
+      // Generate a secure random token
+      const token = crypto.randomBytes(32).toString('hex');
+      const expires = new Date(Date.now() + 3600000); // 1 hour expiry
+
+      // Store the token (in production, this should be in the database)
+      resetTokens.set(token, { email, expires });
+
+      // In a production environment, send an email with the reset link
+      // For development, just log it
+      console.log(`Password reset token for ${email}: ${token}`);
+
+      res.json({ message: "Password reset instructions sent" });
+    } catch (error) {
+      console.error("Password reset error:", error);
+      res.status(500).json({ error: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset Password
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      const resetData = resetTokens.get(token);
+
+      if (!resetData || resetData.expires < new Date()) {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
+      }
+
+      const user = await storage.getUserByEmail(resetData.email);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(user.id, passwordHash);
+
+      // Clean up the used token
+      resetTokens.delete(token);
+
+      res.json({ message: "Password reset successful" });
+    } catch (error) {
+      console.error("Password reset error:", error);
+      res.status(500).json({ error: "Failed to reset password" });
     }
   });
 

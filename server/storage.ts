@@ -11,6 +11,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(id: number, balance: string): Promise<void>;
   updateUserExperience(id: number, experience: number): Promise<void>;
+  updateUserPassword(id: number, passwordHash: string): Promise<void>;
 
   // Trades
   createTrade(trade: Omit<Trade, "id" | "date">): Promise<Trade>;
@@ -208,6 +209,11 @@ export class DatabaseStorage implements IStorage {
 
   async getInsightsByUser(userId: number): Promise<Insight[]> {
     return db.select().from(insights).where(eq(insights.userId, userId));
+  }
+  async updateUserPassword(id: number, passwordHash: string): Promise<void> {
+    await db.update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, id));
   }
 }
 
