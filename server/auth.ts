@@ -31,7 +31,7 @@ export function setupAuth(app: Express) {
   // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
     const currentHost = req.headers.host;
-    const isProduction = currentHost === 'trademate.live';
+    const isProduction = process.env.CUSTOM_DOMAIN === 'true';
 
     console.log('Auth middleware check:', {
       currentHost,
@@ -93,7 +93,7 @@ export function setupAuth(app: Express) {
           firebaseId: decodedToken.uid,
           email: decodedToken.email || '',
           displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-          photoURL: decodedToken.picture || '',
+          photoURL: decoded.picture || '',
         });
         console.log('New user created:', { id: user.id, email: user.email });
       }
