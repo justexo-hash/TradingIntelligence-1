@@ -94,52 +94,46 @@ export default function AuthPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             {isForgotPassword ? (
-              <Form {...forgotPasswordForm}>
-                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="w-full space-y-4">
-                  <FormField
-                    control={forgotPasswordForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email"
-                            placeholder="email@example.com" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="w-full space-y-4">
+                <div>
+                  <FormLabel>Email</FormLabel>
+                  <Input 
+                    type="email"
+                    placeholder="email@example.com"
+                    {...forgotPasswordForm.register("email")}
                   />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Key className="mr-2 h-4 w-4" />
-                        Send Reset Link
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-muted-foreground"
-                    onClick={() => {
-                      setIsForgotPassword(false);
-                      forgotPasswordForm.reset();
-                    }}
-                  >
-                    Back to Login
-                  </Button>
-                </form>
-              </Form>
+                  {forgotPasswordForm.formState.errors.email && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {forgotPasswordForm.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Key className="mr-2 h-4 w-4" />
+                      Send Reset Link
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-muted-foreground"
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    forgotPasswordForm.reset();
+                  }}
+                >
+                  Back to Login
+                </Button>
+              </form>
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
