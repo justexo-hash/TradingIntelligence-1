@@ -9,11 +9,11 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-async function getAuthToken(forceRefresh = true): Promise<string | null> {
+async function getAuthToken(forceRefresh = false): Promise<string | null> {
   try {
     const user = auth.currentUser;
     if (!user) {
-      console.log('No user logged in');
+      console.log('No user logged in, returning null token');
       return null;
     }
 
@@ -21,6 +21,7 @@ async function getAuthToken(forceRefresh = true): Promise<string | null> {
     console.log('Token obtained:', {
       success: !!token,
       uid: user.uid,
+      tokenLength: token?.length,
       host: window.location.hostname
     });
     return token;
@@ -35,29 +36,34 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const isDevelopment = !import.meta.env.PROD;
   try {
-    console.log(`Making ${method} request to ${url} from ${window.location.hostname}`);
-    const token = await getAuthToken(true);
+    console.log(`Making ${method} request to ${url}`, {
+      host: window.location.hostname,
+      isDevelopment
+    });
 
-    if (!token) {
+    // First try without force refresh
+    let token = await getAuthToken(false);
+
+    if (!token && !isDevelopment) {
       console.error('No authentication token available');
       throw new Error("Authentication required");
     }
 
     const headers: Record<string, string> = {
       ...(data ? { "Content-Type": "application/json" } : {}),
-      "Authorization": `Bearer ${token}`,
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
-    console.log('Request details:', { 
+    console.log('Initial request details:', { 
       url,
       method,
-      hasContentType: !!data,
-      hasAuthorization: !!headers.Authorization,
+      hasToken: !!token,
       host: window.location.hostname
     });
 
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -65,29 +71,22 @@ export async function apiRequest(
       cache: "no-store",
     });
 
+    // If unauthorized, try one more time with forced token refresh
     if (res.status === 401) {
-      console.error('Authentication failed:', {
-        status: res.status,
-        statusText: res.statusText,
-        url: res.url,
-        host: window.location.hostname
-      });
+      console.log('Request failed with 401, attempting token refresh');
+      token = await getAuthToken(true);
 
-      // Try one more time with a forced token refresh
-      const newToken = await getAuthToken(true);
-      if (newToken) {
-        headers.Authorization = `Bearer ${newToken}`;
-        const retryRes = await fetch(url, {
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+        console.log('Retrying request with new token');
+
+        res = await fetch(url, {
           method,
           headers,
           body: data ? JSON.stringify(data) : undefined,
           credentials: "include",
           cache: "no-store",
         });
-
-        if (retryRes.ok) {
-          return retryRes;
-        }
       }
     }
 
@@ -99,18 +98,23 @@ export async function apiRequest(
   }
 }
 
-type UnauthorizedBehavior = "returnNull" | "throw";
-
 export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
+  on401: "returnNull" | "throw";
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const isDevelopment = !import.meta.env.PROD;
     try {
-      console.log('Executing query:', queryKey[0], 'from', window.location.hostname);
-      const token = await getAuthToken(true);
+      console.log('Executing query:', {
+        key: queryKey[0],
+        host: window.location.hostname,
+        isDevelopment
+      });
 
-      if (!token) {
+      // First try without force refresh
+      let token = await getAuthToken(false);
+
+      if (!token && !isDevelopment) {
         if (unauthorizedBehavior === "returnNull") {
           console.log('No token available, returning null as configured');
           return null;
@@ -118,47 +122,40 @@ export const getQueryFn: <T>(options: {
         throw new Error("Authentication required");
       }
 
-      const headers: Record<string, string> = {
-        "Authorization": `Bearer ${token}`,
-      };
+      const headers: Record<string, string> = token
+        ? { "Authorization": `Bearer ${token}` }
+        : {};
 
       console.log('Query details:', {
         url: queryKey[0],
-        hasAuthorization: !!headers.Authorization,
+        hasToken: !!token,
         host: window.location.hostname
       });
 
-      const res = await fetch(queryKey[0] as string, {
+      let res = await fetch(queryKey[0] as string, {
         headers,
         credentials: "include",
         cache: "no-store",
       });
 
+      // If unauthorized, try one more time with forced token refresh
       if (res.status === 401) {
-        console.error('Query authentication failed:', {
-          status: res.status,
-          statusText: res.statusText,
-          url: res.url,
-          host: window.location.hostname
-        });
+        console.log('Query failed with 401, attempting token refresh');
+        token = await getAuthToken(true);
 
-        // Try one more time with a forced token refresh
-        const newToken = await getAuthToken(true);
-        if (newToken) {
-          headers.Authorization = `Bearer ${newToken}`;
-          const retryRes = await fetch(queryKey[0] as string, {
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+          console.log('Retrying query with new token');
+
+          res = await fetch(queryKey[0] as string, {
             headers,
             credentials: "include",
             cache: "no-store",
           });
-
-          if (retryRes.ok) {
-            return await retryRes.json();
-          }
         }
 
-        if (unauthorizedBehavior === "returnNull") {
-          console.log('Authentication failed, returning null as configured');
+        if (res.status === 401 && unauthorizedBehavior === "returnNull") {
+          console.log('Authentication failed after refresh, returning null');
           return null;
         }
       }
