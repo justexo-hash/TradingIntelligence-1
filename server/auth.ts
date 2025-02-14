@@ -37,7 +37,8 @@ export function setupAuth(app: Express) {
       currentHost,
       isProduction,
       hasAuth: !!req.headers.authorization,
-      customDomain: 'trademate.live'
+      method: req.method,
+      path: req.path
     });
 
     const authHeader = req.headers.authorization;
@@ -61,6 +62,12 @@ export function setupAuth(app: Express) {
         return next();
       }
 
+      console.error('Authentication required:', {
+        host: currentHost,
+        path: req.path,
+        method: req.method
+      });
+
       return res.status(401).json({ 
         error: "No authentication token provided",
         details: "Please sign in to access this resource"
@@ -73,19 +80,24 @@ export function setupAuth(app: Express) {
         currentHost,
         isProduction,
         tokenLength: token.length,
-        customDomain: 'trademate.live'
+        path: req.path
       });
 
-      const decodedToken = await getAuth().verifyIdToken(token);
+      const decodedToken = await getAuth().verifyIdToken(token, true);  // Force token refresh check
       console.log('Token verified successfully:', {
         uid: decodedToken.uid,
         email: decodedToken.email,
         currentHost,
-        isProduction
+        isProduction,
+        path: req.path
       });
 
       let user = await storage.getUserByFirebaseId(decodedToken.uid);
-      console.log('Database user lookup result:', user ? 'Found' : 'Not found');
+      console.log('Database user lookup result:', {
+        found: !!user,
+        uid: decodedToken.uid,
+        path: req.path
+      });
 
       if (!user) {
         console.log('Creating new user for Firebase UID:', decodedToken.uid);
@@ -93,9 +105,13 @@ export function setupAuth(app: Express) {
           firebaseId: decodedToken.uid,
           email: decodedToken.email || '',
           displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-          photoURL: decoded.picture || '',
+          photoURL: decodedToken.picture || '',
         });
-        console.log('New user created:', { id: user.id, email: user.email });
+        console.log('New user created:', { 
+          id: user.id, 
+          email: user.email,
+          firebaseId: user.firebaseId 
+        });
       }
 
       req.user = user;
@@ -107,7 +123,7 @@ export function setupAuth(app: Express) {
         isProduction,
         errorCode: error.code,
         errorMessage: error.message,
-        customDomain: 'trademate.live'
+        path: req.path
       });
       return res.status(401).json({ 
         error: "Authentication failed",

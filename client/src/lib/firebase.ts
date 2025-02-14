@@ -13,7 +13,7 @@ import {
 
 // Initialize Firebase configuration
 const currentHost = window.location.hostname;
-const isProduction = currentHost === 'trademate.live';
+const isProduction = process.env.CUSTOM_DOMAIN === 'true';
 
 console.log('Firebase initialization:', {
   currentHost,
@@ -25,7 +25,7 @@ console.log('Firebase initialization:', {
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  authDomain: isProduction ? 'trademate.live' : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -89,7 +89,7 @@ export const signInWithProvider = async (providerName: string) => {
     });
 
     if (error.code === 'auth/unauthorized-domain') {
-      throw new Error(`Please add ${currentHost} to Firebase Console's Authorized Domains list.`);
+      throw new Error(`Please ensure ${currentHost} is added to Firebase Console's Authorized Domains.`);
     }
     throw error;
   }
@@ -126,6 +126,8 @@ export const registerWithEmail = async (email: string, password: string) => {
     console.log('Attempting registration on:', currentHost);
     const result = await createUserWithEmailAndPassword(auth, email, password);
     console.log("Successfully registered with email");
+
+    // Force token refresh immediately after registration
     const token = await result.user.getIdToken(true);
     console.log("Token obtained after registration:", {
       success: !!token,
@@ -161,7 +163,11 @@ export const signOutUser = async () => {
 let tokenRefreshTimeout: number | null = null;
 
 onAuthStateChanged(auth, async (user) => {
-  console.log('Auth state changed:', user ? 'User logged in' : 'No user', 'on', currentHost);
+  console.log('Auth state changed:', {
+    status: user ? 'User logged in' : 'No user',
+    host: currentHost,
+    isProduction
+  });
 
   if (user) {
     try {
@@ -172,8 +178,7 @@ onAuthStateChanged(auth, async (user) => {
         uid: user.uid,
         email: user.email,
         currentHost,
-        isProduction,
-        authDomain: firebaseConfig.authDomain
+        isProduction
       });
 
       // Set up periodic token refresh (every 30 minutes)
@@ -182,8 +187,13 @@ onAuthStateChanged(auth, async (user) => {
       }
       tokenRefreshTimeout = window.setInterval(async () => {
         try {
-          await user.getIdToken(true);
-          console.log('Periodic token refresh successful');
+          const newToken = await user.getIdToken(true);
+          console.log('Periodic token refresh successful:', {
+            success: !!newToken,
+            uid: user.uid,
+            currentHost,
+            isProduction
+          });
         } catch (error) {
           console.error('Periodic token refresh failed:', error);
         }

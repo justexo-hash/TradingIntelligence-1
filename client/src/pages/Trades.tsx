@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -29,7 +37,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Trade } from "@shared/schema";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+} from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,7 +51,10 @@ import { z } from "zod";
 type SortOption = "name" | "date" | "pnl" | "buyAmount";
 
 const shareTradeSchema = z.object({
-  analysis: z.string().min(1, "Analysis is required").max(1000, "Analysis must be less than 1000 characters"),
+  analysis: z
+    .string()
+    .min(1, "Analysis is required")
+    .max(1000, "Analysis must be less than 1000 characters"),
 });
 
 type ShareTradeForm = z.infer<typeof shareTradeSchema>;
@@ -83,7 +100,13 @@ export default function Trades() {
   });
 
   const shareTradeMutation = useMutation({
-    mutationFn: async ({ tradeId, analysis }: { tradeId: number; analysis: string }) => {
+    mutationFn: async ({
+      tradeId,
+      analysis,
+    }: {
+      tradeId: number;
+      analysis: string;
+    }) => {
       return apiRequest("POST", "/api/shared-trades", { tradeId, analysis });
     },
     onSuccess: () => {
@@ -91,7 +114,8 @@ export default function Trades() {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] }); // Refresh user data for experience
       toast({
         title: "Success",
-        description: "Trade shared successfully. You earned 10 experience points!",
+        description:
+          "Trade shared successfully. You earned 10 experience points!",
       });
       setSharingTrade(null);
       shareForm.reset();
@@ -126,15 +150,23 @@ export default function Trades() {
 
   const onShareSubmit = (data: ShareTradeForm) => {
     if (!sharingTrade) return;
-    shareTradeMutation.mutate({ tradeId: sharingTrade.id, analysis: data.analysis });
+    shareTradeMutation.mutate({
+      tradeId: sharingTrade.id,
+      analysis: data.analysis,
+    });
   };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">Trades</h1>
-          <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+          <h1 className="text-2xl font-bold md:text-4xl text-[#00ff99] [text-shadow:0_0_10px_#00ff99,0_0_20px_#00ff99,0_0_30px_#00ff99]">
+            Trades
+          </h1>
+          <Select
+            value={sortBy}
+            onValueChange={(value: SortOption) => setSortBy(value)}
+          >
             <SelectTrigger className="w-[180px] bg-black/60 backdrop-blur-sm border-none">
               <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
@@ -160,7 +192,10 @@ export default function Trades() {
       <ScrollArea className="h-[calc(100vh-10rem)]">
         <div className="grid gap-4">
           {sortedTrades?.map((trade) => (
-            <Card key={trade.id} className="p-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-none">
+            <Card
+              key={trade.id}
+              className="p-6 bg-gradient-to-br from-black/80 via-black/60 to-black/40 backdrop-blur-lg border-none"
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
@@ -169,14 +204,15 @@ export default function Trades() {
                       className="p-0 h-auto font-semibold text-lg hover:text-[rgb(var(--solana-green))]"
                       onClick={() =>
                         window.open(
-                          `https://pump.fun/token/${trade.contractAddress}`,
+                          `https://pump.fun/coin/${trade.contractAddress}`,
                           "_blank",
                         )
                       }
                     >
                       {trade.tokenName ? (
                         <>
-                          {trade.tokenName} {trade.tokenSymbol && `(${trade.tokenSymbol})`}
+                          {trade.tokenName}{" "}
+                          {trade.tokenSymbol && `(${trade.tokenSymbol})`}
                         </>
                       ) : (
                         trade.contractAddress
@@ -198,12 +234,17 @@ export default function Trades() {
                             : "text-red-500"
                         }
                       >
-                        {(Number(trade.sellAmount) - Number(trade.buyAmount)).toFixed(4)} SOL
+                        {(
+                          Number(trade.sellAmount) - Number(trade.buyAmount)
+                        ).toFixed(4)}{" "}
+                        SOL
                       </span>
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Dialog onOpenChange={(open) => !open && setEditingTrade(null)}>
+                    <Dialog
+                      onOpenChange={(open) => !open && setEditingTrade(null)}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           variant="ghost"
@@ -213,11 +254,16 @@ export default function Trades() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      {editingTrade?.id === trade.id && <TradeForm editingTrade={trade} />}
+                      {editingTrade?.id === trade.id && (
+                        <TradeForm editingTrade={trade} />
+                      )}
                     </Dialog>
 
                     {!trade.isShared && (
-                      <Dialog open={sharingTrade?.id === trade.id} onOpenChange={(open) => !open && setSharingTrade(null)}>
+                      <Dialog
+                        open={sharingTrade?.id === trade.id}
+                        onOpenChange={(open) => !open && setSharingTrade(null)}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             variant="ghost"
@@ -231,11 +277,15 @@ export default function Trades() {
                           <DialogHeader>
                             <DialogTitle>Share Trade</DialogTitle>
                             <DialogDescription>
-                              Share your trade with the community. Add your analysis to help others learn from your experience.
+                              Share your trade with the community. Add your
+                              analysis to help others learn from your
+                              experience.
                             </DialogDescription>
                           </DialogHeader>
                           <Form {...shareForm}>
-                            <form onSubmit={shareForm.handleSubmit(onShareSubmit)}>
+                            <form
+                              onSubmit={shareForm.handleSubmit(onShareSubmit)}
+                            >
                               <FormField
                                 control={shareForm.control}
                                 name="analysis"
@@ -253,7 +303,10 @@ export default function Trades() {
                                 )}
                               />
                               <DialogFooter className="mt-4">
-                                <Button type="submit" disabled={shareTradeMutation.isPending}>
+                                <Button
+                                  type="submit"
+                                  disabled={shareTradeMutation.isPending}
+                                >
                                   Share Trade
                                 </Button>
                               </DialogFooter>
@@ -273,7 +326,8 @@ export default function Trades() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Trade</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete this trade? This action cannot be undone.
+                            Are you sure you want to delete this trade? This
+                            action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
