@@ -18,7 +18,6 @@ try {
     throw new Error('VITE_FIREBASE_PROJECT_ID environment variable is missing');
   }
 
-  // Ensure proper formatting of private key
   const privateKey = process.env.FIREBASE_PRIVATE_KEY
     .replace(/\\n/g, '\n')
     .replace(/^["']|["']$/g, '');
@@ -32,39 +31,33 @@ try {
   };
 
   initializeApp(adminConfig);
-  console.log('Firebase Admin initialized successfully');
-} catch (error: any) {
+} catch (error) {
   console.error('Error initializing Firebase Admin:', error);
   throw error;
 }
 
 export function setupAuth(app: Express) {
-  // Authentication middleware for API routes
   app.use(async (req: any, res: any, next: any) => {
-    // Only bypass auth in development
     if (!req.headers.authorization?.startsWith('Bearer ')) {
+      // Allow development mode bypass
       if (process.env.NODE_ENV !== 'production') {
-        console.log('Development mode: Using mock user');
         try {
-          const mockUser = await storage.getUserByFirebaseId('dev-user');
+          let mockUser = await storage.getUserByFirebaseId('dev-user');
           if (!mockUser) {
-            const newUser = await storage.createUser({
+            mockUser = await storage.createUser({
               firebaseId: 'dev-user',
               email: 'dev@example.com',
               displayName: 'Dev User',
               photoURL: '',
             });
-            req.user = newUser;
-          } else {
-            req.user = mockUser;
           }
+          req.user = mockUser;
           return next();
         } catch (error) {
           console.error('Error setting up mock user:', error);
           return res.status(500).json({ error: "Internal server error" });
         }
       }
-
       return res.status(401).json({ 
         error: "No authentication token provided",
         details: "Please sign in to access this resource"
@@ -76,13 +69,12 @@ export function setupAuth(app: Express) {
       const decodedToken = await getAuth().verifyIdToken(token);
 
       let user = await storage.getUserByFirebaseId(decodedToken.uid);
-
       if (!user) {
         user = await storage.createUser({
           firebaseId: decodedToken.uid,
           email: decodedToken.email || '',
           displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-          photoURL: decodedToken.picture || '',
+          photoURL: decoded.picture || '',
         });
       }
 
@@ -97,7 +89,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Get current user endpoint
   app.get("/api/user", (req: any, res: any) => {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
