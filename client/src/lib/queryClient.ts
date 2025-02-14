@@ -12,21 +12,17 @@ async function throwIfResNotOk(res: Response) {
 async function getAuthToken(forceRefresh = false): Promise<string | null> {
   try {
     const user = auth.currentUser;
-    const currentHost = window.location.hostname;
-    const isCustomDomain = currentHost === 'trademate.live';
-
     if (!user) {
       console.log('No user logged in, returning null token');
       return null;
     }
 
-    const token = await user.getIdToken(forceRefresh || isCustomDomain);
+    const token = await user.getIdToken(forceRefresh);
     console.log('Token obtained:', {
       success: !!token,
       uid: user.uid,
       tokenLength: token?.length,
-      host: currentHost,
-      isCustomDomain
+      host: window.location.hostname
     });
     return token;
   } catch (error) {
@@ -40,25 +36,16 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const currentHost = window.location.hostname;
-  const isCustomDomain = currentHost === 'trademate.live';
-  const isDevelopment = !import.meta.env.PROD && !isCustomDomain;
+  const isDevelopment = !import.meta.env.PROD;
 
   try {
     console.log(`Making ${method} request to ${url}`, {
-      host: currentHost,
-      isDevelopment,
-      isCustomDomain
+      host: window.location.hostname,
+      isDevelopment
     });
 
     // First try without force refresh
     let token = await getAuthToken(false);
-
-    // In production or custom domain, always require token
-    if (!token && (import.meta.env.PROD || isCustomDomain)) {
-      console.error('No authentication token available');
-      throw new Error("Authentication required");
-    }
 
     const headers: Record<string, string> = {
       ...(data ? { "Content-Type": "application/json" } : {}),
@@ -69,8 +56,7 @@ export async function apiRequest(
       url,
       method,
       hasToken: !!token,
-      host: currentHost,
-      isCustomDomain
+      host: window.location.hostname
     });
 
     let res = await fetch(url, {
@@ -82,7 +68,7 @@ export async function apiRequest(
     });
 
     // If unauthorized, try one more time with forced token refresh
-    if (res.status === 401) {
+    if (res.status === 401 && token) {
       console.log('Request failed with 401, attempting token refresh');
       token = await getAuthToken(true);
 
@@ -113,24 +99,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const isDevelopment = !import.meta.env.PROD;
     try {
       console.log('Executing query:', {
         key: queryKey[0],
-        host: window.location.hostname,
-        isDevelopment
+        host: window.location.hostname
       });
 
       // First try without force refresh
       let token = await getAuthToken(false);
-
-      if (!token && !isDevelopment) {
-        if (unauthorizedBehavior === "returnNull") {
-          console.log('No token available, returning null as configured');
-          return null;
-        }
-        throw new Error("Authentication required");
-      }
 
       const headers: Record<string, string> = token
         ? { "Authorization": `Bearer ${token}` }
@@ -148,8 +124,8 @@ export const getQueryFn: <T>(options: {
         cache: "no-store",
       });
 
-      // If unauthorized, try one more time with forced token refresh
-      if (res.status === 401) {
+      // If unauthorized and we have a token, try one more time with forced refresh
+      if (res.status === 401 && token) {
         console.log('Query failed with 401, attempting token refresh');
         token = await getAuthToken(true);
 
