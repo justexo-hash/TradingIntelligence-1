@@ -89,8 +89,7 @@ export default function AuthPage() {
                 ? "Enter your email to receive a password reset link"
                 : isRegistering
                   ? "Join our community of traders and start tracking your performance"
-                  : "Sign in to access your trading journal and insights"
-              }
+                  : "Sign in to access your trading journal and insights"}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
@@ -104,7 +103,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="email@example.com" {...field} />
+                          <Input 
+                            type="email"
+                            placeholder="email@example.com" 
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -128,7 +131,10 @@ export default function AuthPage() {
                     type="button"
                     variant="link"
                     className="w-full text-muted-foreground"
-                    onClick={() => setIsForgotPassword(false)}
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      forgotPasswordForm.reset();
+                    }}
                   >
                     Back to Login
                   </Button>
@@ -144,7 +150,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="email@example.com" {...field} />
+                          <Input 
+                            type="email"
+                            placeholder="email@example.com" 
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -157,7 +167,11 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <Input 
+                            type="password" 
+                            placeholder="Enter your password"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
