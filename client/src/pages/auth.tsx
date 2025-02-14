@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -21,7 +22,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useState } from "react";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -78,62 +78,68 @@ export default function AuthPage() {
           <CardHeader className="flex flex-col items-center">
             <img src="/logo.png" alt="Logo" className="h-13 w-70 mb-2" />
             <CardTitle className="text-2xl font-bold">
-              {isForgotPassword 
+              {isForgotPassword
                 ? "Reset Password"
-                : isRegistering 
-                  ? "Create an Account" 
-                  : "Welcome Back"}
+                : isRegistering
+                ? "Create an Account"
+                : "Welcome Back"}
             </CardTitle>
             <CardDescription>
               {isForgotPassword
                 ? "Enter your email to receive a password reset link"
                 : isRegistering
-                  ? "Join our community of traders and start tracking your performance"
-                  : "Sign in to access your trading journal and insights"}
+                ? "Join our community of traders and start tracking your performance"
+                : "Sign in to access your trading journal and insights"}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             {isForgotPassword ? (
-              <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="w-full space-y-4">
-                <div>
-                  <FormLabel>Email</FormLabel>
-                  <Input 
-                    type="email"
-                    placeholder="email@example.com"
-                    {...forgotPasswordForm.register("email")}
+              <Form {...forgotPasswordForm}>
+                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="w-full space-y-4">
+                  <FormField
+                    control={forgotPasswordForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="email@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  {forgotPasswordForm.formState.errors.email && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {forgotPasswordForm.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Key className="mr-2 h-4 w-4" />
-                      Send Reset Link
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="link"
-                  className="w-full text-muted-foreground"
-                  onClick={() => {
-                    setIsForgotPassword(false);
-                    forgotPasswordForm.reset();
-                  }}
-                >
-                  Back to Login
-                </Button>
-              </form>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Key className="mr-2 h-4 w-4" />
+                        Send Reset Link
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-muted-foreground"
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      forgotPasswordForm.reset();
+                    }}
+                  >
+                    Back to Login
+                  </Button>
+                </form>
+              </Form>
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
@@ -144,10 +150,10 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             type="email"
-                            placeholder="email@example.com" 
-                            {...field} 
+                            placeholder="email@example.com"
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -161,10 +167,10 @@ export default function AuthPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="password" 
+                          <Input
+                            type="password"
                             placeholder="Enter your password"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
