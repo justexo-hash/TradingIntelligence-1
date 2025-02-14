@@ -1,94 +1,108 @@
-import { auth as adminAuth } from "firebase-admin";
 import { Express } from "express";
-import { getAuth } from "firebase-admin/auth";
-import { initializeApp, cert } from "firebase-admin/app";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 
-// Initialize Firebase Admin with service account
-try {
-  if (!process.env.FIREBASE_PRIVATE_KEY) {
-    throw new Error('FIREBASE_PRIVATE_KEY environment variable is missing');
-  }
-
-  if (!process.env.FIREBASE_CLIENT_EMAIL) {
-    throw new Error('FIREBASE_CLIENT_EMAIL environment variable is missing');
-  }
-
-  if (!process.env.VITE_FIREBASE_PROJECT_ID) {
-    throw new Error('VITE_FIREBASE_PROJECT_ID environment variable is missing');
-  }
-
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY
-    .replace(/\\n/g, '\n')
-    .replace(/^["']|["']$/g, '');
-
-  const adminConfig = {
-    credential: cert({
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: privateKey,
-    }),
-  };
-
-  initializeApp(adminConfig);
-} catch (error) {
-  console.error('Error initializing Firebase Admin:', error);
-  throw error;
-}
-
 export function setupAuth(app: Express) {
-  app.use(async (req: any, res: any, next: any) => {
-    if (!req.headers.authorization?.startsWith('Bearer ')) {
-      // Allow development mode bypass
-      if (process.env.NODE_ENV !== 'production') {
-        try {
-          let mockUser = await storage.getUserByFirebaseId('dev-user');
-          if (!mockUser) {
-            mockUser = await storage.createUser({
-              firebaseId: 'dev-user',
-              email: 'dev@example.com',
-              displayName: 'Dev User',
-              photoURL: '',
-            });
-          }
-          req.user = mockUser;
-          return next();
-        } catch (error) {
-          console.error('Error setting up mock user:', error);
-          return res.status(500).json({ error: "Internal server error" });
-        }
+  // Check session
+  app.get("/api/auth/session", (req: any, res) => {
+    if (!req.session?.user) {
+      return res.json({ user: null });
+    }
+    res.json({ user: req.session.user });
+  });
+
+  // Login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
       }
+
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      const sessionUser = {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      };
+
+      req.session.user = sessionUser;
+      res.json({ user: sessionUser });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Register
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      const exists = await storage.getUserByEmail(email);
+      if (exists) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = await storage.createUser({
+        email,
+        passwordHash,
+        displayName: email.split('@')[0],
+      });
+
+      const sessionUser = {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      };
+
+      req.session.user = sessionUser;
+      res.json({ user: sessionUser });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Logout
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // Auth middleware for API routes
+  app.use("/api", (req: any, res: any, next: any) => {
+    // Allow development mode bypass
+    if (process.env.NODE_ENV !== 'production') {
+      return next();
+    }
+
+    if (!req.session?.user) {
       return res.status(401).json({ 
-        error: "No authentication token provided",
+        error: "Authentication required",
         details: "Please sign in to access this resource"
       });
     }
 
-    try {
-      const token = req.headers.authorization.split('Bearer ')[1];
-      const decodedToken = await getAuth().verifyIdToken(token);
-
-      let user = await storage.getUserByFirebaseId(decodedToken.uid);
-      if (!user) {
-        user = await storage.createUser({
-          firebaseId: decodedToken.uid,
-          email: decodedToken.email || '',
-          displayName: decodedToken.name || decodedToken.email?.split('@')[0] || 'User',
-          photoURL: decoded.picture || '',
-        });
-      }
-
-      req.user = user;
-      next();
-    } catch (error: any) {
-      console.error('Firebase token verification failed:', error);
-      return res.status(401).json({ 
-        error: "Authentication failed",
-        details: error.message
-      });
-    }
+    req.user = req.session.user;
+    next();
   });
 
+  // Get current user endpoint
   app.get("/api/user", (req: any, res: any) => {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });

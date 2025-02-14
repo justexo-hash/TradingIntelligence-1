@@ -1,7 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2, UserPlus, LogIn } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +30,7 @@ const formSchema = z.object({
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { user, signIn, signInEmail, register, isLoading } = useAuth();
+  const { user, signIn, register, isLoading } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -42,21 +41,16 @@ export default function AuthPage() {
     },
   });
 
-  // Only redirect after all hooks are called
   if (user) {
     setTimeout(() => setLocation("/"), 0);
     return null;
   }
 
-  const handleSignIn = async (provider: string) => {
-    await signIn(provider);
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (isRegistering) {
       await register(values.email, values.password);
     } else {
-      await signInEmail(values.email, values.password);
+      await signIn(values.email, values.password);
     }
   };
 
@@ -139,30 +133,6 @@ export default function AuthPage() {
                 </Button>
               </form>
             </Form>
-
-            <div className="relative w-full my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => handleSignIn('google')}
-              className="w-full flex items-center justify-center gap-2 bg-white text-gray-900 hover:bg-gray-100"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <SiGoogle className="h-4 w-4" />
-              )}
-              Sign in with Google
-            </Button>
           </CardContent>
         </Card>
       </div>

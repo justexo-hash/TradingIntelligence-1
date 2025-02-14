@@ -2,11 +2,11 @@ import { pgTable, text, serial, integer, decimal, timestamp, boolean, json, json
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Update users table to include Firebase fields
+// Update users table to remove Firebase fields and add password
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  firebaseId: text("firebase_id").notNull().unique(),
-  email: text("email").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   displayName: text("display_name").notNull(),
   photoURL: text("photo_url"),
   accountBalance: decimal("account_balance").notNull().default("0"),
@@ -94,14 +94,13 @@ export const tradeReviews = pgTable("trade_reviews", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Update insert schema for users
+// Update insert schema for users to handle password
 export const insertUserSchema = createInsertSchema(users).pick({
-  firebaseId: true,
   email: true,
   displayName: true,
   photoURL: true,
 }).extend({
-  firebaseId: z.string().min(1, "firebaseId is required"),
+  passwordHash: z.string().min(1, "Password hash is required"),
   email: z.string().email("Invalid email address"),
   displayName: z.string().min(1, "displayName is required"),
 });
@@ -147,7 +146,6 @@ export const insertTradeReviewSchema = createInsertSchema(tradeReviews).omit({
   helpful: true,
 });
 
-// Update types
 export type User = typeof users.$inferSelect;
 export type Trade = typeof trades.$inferSelect;
 export type Journal = typeof journals.$inferSelect;

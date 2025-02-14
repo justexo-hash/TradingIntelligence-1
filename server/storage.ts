@@ -7,7 +7,7 @@ import { db } from "./db";
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
-  getUserByFirebaseId(firebaseId: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(id: number, balance: string): Promise<void>;
   updateUserExperience(id: number, experience: number): Promise<void>;
@@ -56,8 +56,8 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByFirebaseId(firebaseId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.firebaseId, firebaseId));
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
