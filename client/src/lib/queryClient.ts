@@ -12,17 +12,21 @@ async function throwIfResNotOk(res: Response) {
 async function getAuthToken(forceRefresh = false): Promise<string | null> {
   try {
     const user = auth.currentUser;
+    const currentHost = window.location.hostname;
+    const isCustomDomain = currentHost === 'trademate.live';
+
     if (!user) {
       console.log('No user logged in, returning null token');
       return null;
     }
 
-    const token = await user.getIdToken(forceRefresh);
+    const token = await user.getIdToken(forceRefresh || isCustomDomain);
     console.log('Token obtained:', {
       success: !!token,
       uid: user.uid,
       tokenLength: token?.length,
-      host: window.location.hostname
+      host: currentHost,
+      isCustomDomain
     });
     return token;
   } catch (error) {
@@ -36,17 +40,22 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const isDevelopment = !import.meta.env.PROD;
+  const currentHost = window.location.hostname;
+  const isCustomDomain = currentHost === 'trademate.live';
+  const isDevelopment = !import.meta.env.PROD && !isCustomDomain;
+
   try {
     console.log(`Making ${method} request to ${url}`, {
-      host: window.location.hostname,
-      isDevelopment
+      host: currentHost,
+      isDevelopment,
+      isCustomDomain
     });
 
     // First try without force refresh
     let token = await getAuthToken(false);
 
-    if (!token && !isDevelopment) {
+    // In production or custom domain, always require token
+    if (!token && (import.meta.env.PROD || isCustomDomain)) {
       console.error('No authentication token available');
       throw new Error("Authentication required");
     }
@@ -60,7 +69,8 @@ export async function apiRequest(
       url,
       method,
       hasToken: !!token,
-      host: window.location.hostname
+      host: currentHost,
+      isCustomDomain
     });
 
     let res = await fetch(url, {

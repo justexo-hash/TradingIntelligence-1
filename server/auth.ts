@@ -73,11 +73,9 @@ export function setupAuth(app: Express) {
       path: req.path
     });
 
-    const authHeader = req.headers.authorization;
-
-    // Only allow development mode bypass on non-custom domain
-    if (!authHeader?.startsWith('Bearer ')) {
-      if (!isCustomDomain) {
+    // Only bypass auth in development and non-custom domain
+    if (!req.headers.authorization?.startsWith('Bearer ')) {
+      if (!isCustomDomain && process.env.NODE_ENV !== 'production') {
         console.log('Development mode: Using mock user');
         try {
           const mockUser = await storage.getUserByFirebaseId('dev-user');
@@ -102,12 +100,6 @@ export function setupAuth(app: Express) {
         }
       }
 
-      console.error('Authentication required:', {
-        host: currentHost,
-        path: req.path,
-        method: req.method
-      });
-
       return res.status(401).json({ 
         error: "No authentication token provided",
         details: "Please sign in to access this resource"
@@ -115,7 +107,7 @@ export function setupAuth(app: Express) {
     }
 
     try {
-      const token = authHeader.split('Bearer ')[1];
+      const token = req.headers.authorization.split('Bearer ')[1];
       console.log('Verifying Firebase token:', {
         currentHost,
         isCustomDomain,
