@@ -67,6 +67,7 @@ export default function AuthPage() {
   };
 
   const onForgotPassword = async (values: z.infer<typeof forgotPasswordSchema>) => {
+    console.log("Submitting forgot password form with email:", values.email);
     await requestPasswordReset(values.email);
     setIsForgotPassword(false);
   };
@@ -94,56 +95,50 @@ export default function AuthPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             {isForgotPassword ? (
-              <Form {...forgotPasswordForm}>
-                <form
-                  onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)}
-                  className="w-full space-y-4"
-                >
-                  <FormField
-                    control={forgotPasswordForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="email@example.com"
-                            aria-label="Email address for password reset"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <form 
+                onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} 
+                className="w-full space-y-4"
+              >
+                <div className="space-y-2">
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    {...forgotPasswordForm.register("email")}
+                    aria-label="Email address for password reset"
                   />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Key className="mr-2 h-4 w-4" />
-                        Send Reset Link
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="w-full text-muted-foreground"
-                    onClick={() => {
-                      setIsForgotPassword(false);
-                      forgotPasswordForm.reset();
-                    }}
-                  >
-                    Back to Login
-                  </Button>
-                </form>
-              </Form>
+                  {forgotPasswordForm.formState.errors.email && (
+                    <p className="text-sm text-red-500">
+                      {forgotPasswordForm.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Key className="mr-2 h-4 w-4" />
+                      Send Reset Link
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-muted-foreground"
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    forgotPasswordForm.reset();
+                  }}
+                >
+                  Back to Login
+                </Button>
+              </form>
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
