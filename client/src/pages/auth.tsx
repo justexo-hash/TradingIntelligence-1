@@ -95,7 +95,10 @@ export default function AuthPage() {
           <CardContent className="flex flex-col items-center gap-4">
             {isForgotPassword ? (
               <Form {...forgotPasswordForm}>
-                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="w-full space-y-4">
+                <form
+                  onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)}
+                  className="w-full space-y-4"
+                >
                   <FormField
                     control={forgotPasswordForm.control}
                     name="email"
@@ -104,9 +107,10 @@ export default function AuthPage() {
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
+                            {...field}
                             type="email"
                             placeholder="email@example.com"
-                            {...field}
+                            aria-label="Email address for password reset"
                           />
                         </FormControl>
                         <FormMessage />
@@ -154,6 +158,7 @@ export default function AuthPage() {
                             type="email"
                             placeholder="email@example.com"
                             {...field}
+                            aria-label="Email Address"
                           />
                         </FormControl>
                         <FormMessage />
@@ -171,6 +176,7 @@ export default function AuthPage() {
                             type="password"
                             placeholder="Enter your password"
                             {...field}
+                            aria-label="Password"
                           />
                         </FormControl>
                         <FormMessage />
