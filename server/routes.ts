@@ -59,29 +59,67 @@ export function registerRoutes(app: Express) {
     },
   );
 
-  // Update the token information endpoint
+  // Update the token information endpoint to use SolanaTracker API
   app.get("/api/token/:contractAddress", async (req, res) => {
     try {
       const { contractAddress } = req.params;
+      const API_KEY = "816450d6-d4b7-4497-8c53-d44183f4f647";
 
       // Log the request attempt
       console.log(
-        `Attempting to fetch token info for address: ${contractAddress}`,
+        `Attempting to fetch token info from SolanaTracker for address: ${contractAddress}`,
       );
 
-      // Return generic token data since the external API is down
-      // This allows the app to function without relying on the external API
+      // Fetch token data from SolanaTracker API
+      const response = await fetch(`https://data.solanatracker.io/tokens/${contractAddress}`, {
+        headers: {
+          'X-API-KEY': API_KEY,
+          'Accept': 'application/json'
+        },
+      });
+
+      // Check if the response is successful
+      if (!response.ok) {
+        console.warn(`SolanaTracker API request failed with status: ${response.status}`);
+        
+        // Return basic fallback data when API call fails
+        return res.json({
+          name: contractAddress.substring(0, 10),
+          symbol: contractAddress.substring(0, 4).toUpperCase(),
+          image: null,
+          description: "Token information currently unavailable",
+          usdMarketCap: "N/A",
+          price: "N/A",
+          volume24h: "N/A"
+        });
+      }
+
+      // Parse the response
+      const data = await response.json();
+      console.log("SolanaTracker API response:", data);
+      
+      // Extract relevant data from the nested structure
+      const tokenInfo = data.token || {};
+      const poolInfo = data.pools && data.pools.length > 0 ? data.pools[0] : {};
+      
+      // Format the data to match our expected structure
       const tokenData = {
-        name: contractAddress.substring(0, 10),
-        symbol: contractAddress.substring(0, 4).toUpperCase(),
-        image: null,
-        description: "Token information currently unavailable",
-        usdMarketCap: "N/A",
-        price: "N/A",
-        volume24h: "N/A"
+        name: tokenInfo.name || contractAddress.substring(0, 10),
+        symbol: tokenInfo.symbol || contractAddress.substring(0, 4).toUpperCase(),
+        image: tokenInfo.image || null,
+        description: tokenInfo.description || "No description available",
+        usdMarketCap: poolInfo.marketCap?.usd 
+          ? `$${Number(poolInfo.marketCap.usd).toLocaleString()}` 
+          : "N/A",
+        price: poolInfo.price?.usd 
+          ? `$${Number(poolInfo.price.usd).toFixed(6)}` 
+          : "N/A",
+        volume24h: poolInfo.txns?.volume 
+          ? `$${Number(poolInfo.txns.volume).toLocaleString()}` 
+          : "N/A"
       };
 
-      console.log("Using fallback token data:", tokenData);
+      console.log("Formatted token data:", tokenData);
       res.json(tokenData);
     } catch (error) {
       console.error("Error fetching token info:", error);
@@ -115,16 +153,55 @@ export function registerRoutes(app: Express) {
         // Initialize default token data
         let tokenData: { name?: string; symbol?: string; image_uri?: string } = {};
         const contractAddress = req.body.contractAddress;
+        const API_KEY = "816450d6-d4b7-4497-8c53-d44183f4f647";
         
-        // Generate basic token info from contract address
-        // This serves as fallback when API is unavailable
-        tokenData = {
-          name: contractAddress ? contractAddress.substring(0, 10) : null,
-          symbol: contractAddress ? contractAddress.substring(0, 4).toUpperCase() : null,
-          image_uri: null
-        };
+        if (contractAddress) {
+          try {
+            console.log(`Attempting to fetch token info from SolanaTracker for trade creation: ${contractAddress}`);
+            
+            // Fetch token data from SolanaTracker API
+            const response = await fetch(`https://data.solanatracker.io/tokens/${contractAddress}`, {
+              headers: {
+                'X-API-KEY': API_KEY,
+                'Accept': 'application/json'
+              },
+              // Add timeout to prevent hanging requests
+              signal: AbortSignal.timeout(3000)
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log("SolanaTracker API response for trade creation:", data);
+              
+              // Extract token info from nested structure
+              const tokenInfo = data.token || {};
+              
+              tokenData = {
+                name: tokenInfo.name || contractAddress.substring(0, 10),
+                symbol: tokenInfo.symbol || contractAddress.substring(0, 4).toUpperCase(),
+                image_uri: tokenInfo.image || null
+              };
+            } else {
+              console.warn(`SolanaTracker API request failed with status: ${response.status}`);
+              // Fall back to basic token data
+              tokenData = {
+                name: contractAddress.substring(0, 10),
+                symbol: contractAddress.substring(0, 4).toUpperCase(),
+                image_uri: null
+              };
+            }
+          } catch (error) {
+            console.error("Error fetching token data from SolanaTracker:", error);
+            // Fall back to basic token data
+            tokenData = {
+              name: contractAddress.substring(0, 10),
+              symbol: contractAddress.substring(0, 4).toUpperCase(),
+              image_uri: null
+            };
+          }
+        }
         
-        console.log("Using basic token data for trade creation:", tokenData);
+        console.log("Using token data for trade creation:", tokenData);
 
         const trade = insertTradeSchema.parse({
           ...req.body,
@@ -188,13 +265,48 @@ export function registerRoutes(app: Express) {
           req.body.contractAddress &&
           req.body.contractAddress !== trade.contractAddress
         ) {
-          // Generate basic token info from contract address
-          // This serves as fallback when API is unavailable
-          tokenName = req.body.contractAddress.substring(0, 10);
-          tokenSymbol = req.body.contractAddress.substring(0, 4).toUpperCase();
-          tokenImage = null;
+          const contractAddress = req.body.contractAddress;
+          const API_KEY = "816450d6-d4b7-4497-8c53-d44183f4f647";
           
-          console.log("Using basic token data for trade update:", {
+          try {
+            console.log(`Attempting to fetch token info from SolanaTracker for trade update: ${contractAddress}`);
+            
+            // Fetch token data from SolanaTracker API
+            const response = await fetch(`https://data.solanatracker.io/tokens/${contractAddress}`, {
+              headers: {
+                'X-API-KEY': API_KEY,
+                'Accept': 'application/json'
+              },
+              // Add timeout to prevent hanging requests
+              signal: AbortSignal.timeout(3000)
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log("SolanaTracker API response for trade update:", data);
+              
+              // Extract token info from nested structure
+              const tokenInfo = data.token || {};
+              
+              tokenName = tokenInfo.name || contractAddress.substring(0, 10);
+              tokenSymbol = tokenInfo.symbol || contractAddress.substring(0, 4).toUpperCase();
+              tokenImage = tokenInfo.image || null;
+            } else {
+              console.warn(`SolanaTracker API request failed with status: ${response.status}`);
+              // Fall back to basic token data
+              tokenName = contractAddress.substring(0, 10);
+              tokenSymbol = contractAddress.substring(0, 4).toUpperCase();
+              tokenImage = null;
+            }
+          } catch (error) {
+            console.error("Error fetching token data from SolanaTracker for update:", error);
+            // Fall back to basic token data
+            tokenName = contractAddress.substring(0, 10);
+            tokenSymbol = contractAddress.substring(0, 4).toUpperCase();
+            tokenImage = null;
+          }
+          
+          console.log("Using token data for trade update:", {
             tokenName,
             tokenSymbol,
             tokenImage
