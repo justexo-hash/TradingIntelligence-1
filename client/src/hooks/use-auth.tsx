@@ -29,14 +29,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check session on mount
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
+    fetch('/api/auth/session', { 
+      credentials: 'include' // Important for cross-origin requests with cookies
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Session fetch failed: ' + res.status);
+        }
+        return res.json();
+      })
       .then(data => {
         if (data.user) {
+          console.log('Session loaded successfully:', data.user.email);
           setUser(data.user);
+        } else {
+          console.log('No active session found');
         }
       })
-      .catch(console.error)
+      .catch(error => {
+        console.error("Session check error:", error);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -48,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important for cross-origin requests with cookies
         body: JSON.stringify({ email, password }),
       });
 
@@ -57,10 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await res.json();
+      console.log('Login successful:', data.user);
       setUser(data.user);
       return data.user;
     } catch (error) {
       const e = error as Error;
+      console.error('Login error:', e);
       setError(e);
       toast({
         title: "Sign in failed",
@@ -81,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important for cross-origin requests with cookies
         body: JSON.stringify({ email, password }),
       });
 
@@ -90,10 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await res.json();
+      console.log('Registration successful:', data.user);
       setUser(data.user);
       return data.user;
     } catch (error) {
       const e = error as Error;
+      console.error('Registration error:', e);
       setError(e);
       toast({
         title: "Registration failed",
@@ -114,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important for cross-origin requests with cookies
         body: JSON.stringify({ email }),
       });
 
@@ -128,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       const e = error as Error;
+      console.error('Password reset request error:', e);
       setError(e);
       toast({
         title: "Password Reset Failed",
@@ -147,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Important for cross-origin requests with cookies
         body: JSON.stringify({ token, newPassword }),
       });
 
@@ -161,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       const e = error as Error;
+      console.error('Password reset error:', e);
       setError(e);
       toast({
         title: "Password Reset Failed",
@@ -175,10 +197,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setError(null);
-      await fetch('/api/auth/logout', { method: 'POST' });
+      const res = await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include' // Important for cross-origin requests with cookies
+      });
+      
+      if (!res.ok) {
+        throw new Error('Logout failed: ' + res.status);
+      }
+      
+      console.log('Logout successful');
       setUser(null);
     } catch (error) {
       const e = error as Error;
+      console.error('Logout error:', e);
       setError(e);
       toast({
         title: "Sign out failed",

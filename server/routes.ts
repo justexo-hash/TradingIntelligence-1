@@ -13,6 +13,9 @@ import fetch from "node-fetch";
 import { AuthenticatedRequest } from "./types";
 import { Response, NextFunction } from "express";
 
+// SolanaTracker API Key
+const API_KEY = '816450d6-d4b7-4497-8c53-d44183f4f647';
+
 const generateInsightsSchema = z.object({
   userId: z.number(),
 });

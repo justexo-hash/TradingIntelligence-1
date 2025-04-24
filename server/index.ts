@@ -1,15 +1,35 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
+import { setupAuth } from "./auth";
+
+// Configure CORS
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // In development, allow all origins
+    return callback(null, true);
+  },
+  credentials: true, // This is important for cookies/auth to work properly
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
 
 const app = express();
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Configure session store
 const PgSession = connectPgSimple(session);
+const isProduction = process.env.NODE_ENV === "production";
 
 // Configure session middleware
 app.use(session({
@@ -22,11 +42,12 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     httpOnly: true,
-    sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    sameSite: isProduction ? 'none' : 'lax', // Allow cross-site cookies in production
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  },
+  proxy: isProduction // Trust the reverse proxy if in production
 }));
 
 app.use((req, res, next) => {
