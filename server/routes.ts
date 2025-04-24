@@ -142,8 +142,26 @@ export function registerRoutes(app: Express) {
   app.post("/api/trades", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       // First fetch token info to get the name and symbol
-      const response = await fetch(`https://frontend-api.pump.fun/coins/${req.body.contractAddress}?sync=true`);
-      const tokenData = await response.json();
+      const response = await fetch(`https://frontend-api.pump.fun/coins/${req.body.contractAddress}?sync=true`, {
+        headers: {
+          'Accept': '*/*'
+        }
+      });
+      
+      let tokenData: { name?: string; symbol?: string; image_uri?: string } = {};
+      
+      if (response.ok) {
+        try {
+          const responseText = await response.text();
+          tokenData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("Failed to parse token API response:", parseError);
+          // Continue with empty token data rather than failing the trade creation
+        }
+      } else {
+        console.warn(`Token info fetch failed for address: ${req.body.contractAddress}. Status: ${response.status}`);
+        // Continue with empty token data
+      }
 
       const trade = insertTradeSchema.parse({
         ...req.body,
@@ -189,15 +207,45 @@ export function registerRoutes(app: Express) {
       if (!trade || trade.userId !== req.user!.id) {
         return res.status(404).json({ error: "Trade not found" });
       }
+      
+      // If the contract address has changed, try to fetch updated token info
+      let tokenName = trade.tokenName;
+      let tokenSymbol = trade.tokenSymbol;
+      let tokenImage = trade.tokenImage;
+      
+      if (req.body.contractAddress && req.body.contractAddress !== trade.contractAddress) {
+        try {
+          const response = await fetch(`https://frontend-api.pump.fun/coins/${req.body.contractAddress}?sync=true`, {
+            headers: {
+              'Accept': '*/*'
+            }
+          });
+          
+          if (response.ok) {
+            const responseText = await response.text();
+            const tokenData = JSON.parse(responseText);
+            tokenName = tokenData.name || null;
+            tokenSymbol = tokenData.symbol || null;
+            tokenImage = tokenData.image_uri || null;
+          }
+        } catch (tokenError) {
+          console.warn("Failed to fetch updated token info:", tokenError);
+          // Continue with existing token info
+        }
+      }
 
       const updatedTrade = insertTradeSchema.parse({
         ...req.body,
         userId: req.user!.id,
+        tokenName,
+        tokenSymbol,
+        tokenImage,
       });
 
       const result = await storage.updateTrade(tradeId, updatedTrade);
       res.json(result);
     } catch (error) {
+      console.error("Error updating trade:", error);
       res.status(400).json({ error: "Invalid trade data" });
     }
   });

@@ -8,6 +8,17 @@ import {
   type InsertTrade,
   type Trade,
 } from "@shared/schema";
+
+// Define the TokenInfo interface to match the API response
+interface TokenInfo {
+  name?: string; 
+  symbol?: string;
+  image?: string;
+  description?: string;
+  usdMarketCap?: string;
+  price?: string;
+  volume24h?: string;
+}
 import {
   DialogContent,
   DialogHeader,
@@ -97,7 +108,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
     data: tokenInfo,
     isLoading: isLoadingToken,
     error: tokenError,
-  } = useQuery({
+  } = useQuery<TokenInfo>({
     queryKey: [`/api/token/${contractAddress}`],
     enabled: !!contractAddress && contractAddress.length > 0,
     retry: 1,
@@ -529,6 +540,7 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                 <FormControl>
                   <Textarea
                     {...field}
+                    value={field.value || ""}
                     placeholder="Add any additional notes..."
                   />
                 </FormControl>
