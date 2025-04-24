@@ -43,9 +43,9 @@ export async function generateTradeInsights(trades: Trade[]): Promise<Insight> {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      userId: 1, // TODO: Replace with actual user ID
-    }),
+    // Note: userId is handled by the auth middleware on the server side
+    // from the authenticated session, so no need to send it
+    body: JSON.stringify({}),
     credentials: "include",
   });
 

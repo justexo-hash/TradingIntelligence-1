@@ -42,9 +42,11 @@ Keep the response concise and actionable.`;
 
   try {
     if (!PERPLEXITY_API_KEY) {
-      throw new Error("PERPLEXITY_API_KEY is not set. Please configure your API key.");
+      console.error("PERPLEXITY_API_KEY is not set. Cannot generate AI insights.");
+      throw new Error("API key is missing. Please contact support to enable AI insights.");
     }
     
+    console.log("Generating insights with Perplexity AI...");
     const response = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
       headers: {
