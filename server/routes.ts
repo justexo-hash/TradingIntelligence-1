@@ -66,7 +66,6 @@ export function registerRoutes(app: Express) {
   app.get("/api/token/:contractAddress", async (req, res) => {
     try {
       const { contractAddress } = req.params;
-      const API_KEY = "816450d6-d4b7-4497-8c53-d44183f4f647";
 
       // Log the request attempt
       console.log(
@@ -79,6 +78,8 @@ export function registerRoutes(app: Express) {
           'X-API-KEY': API_KEY,
           'Accept': 'application/json'
         },
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(5000)
       });
 
       // Check if the response is successful
@@ -156,7 +157,6 @@ export function registerRoutes(app: Express) {
         // Initialize default token data
         let tokenData: { name?: string; symbol?: string; image_uri?: string } = {};
         const contractAddress = req.body.contractAddress;
-        const API_KEY = "816450d6-d4b7-4497-8c53-d44183f4f647";
         
         if (contractAddress) {
           try {
@@ -269,7 +269,6 @@ export function registerRoutes(app: Express) {
           req.body.contractAddress !== trade.contractAddress
         ) {
           const contractAddress = req.body.contractAddress;
-          const API_KEY = "816450d6-d4b7-4497-8c53-d44183f4f647";
           
           try {
             console.log(`Attempting to fetch token info from SolanaTracker for trade update: ${contractAddress}`);
