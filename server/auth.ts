@@ -1,7 +1,20 @@
-import { Express } from "express";
+import { Express, Request } from "express";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { storage } from "./storage";
+import { SessionData } from "express-session";
+
+// Extend the session interface to include user property
+declare module "express-session" {
+  interface SessionData {
+    user?: {
+      id: number;
+      email: string;
+      displayName: string;
+      photoURL?: string | null;
+    };
+  }
+}
 
 // In-memory token store (should be replaced with database storage in production)
 const resetTokens = new Map<string, { email: string; expires: Date }>();
@@ -16,7 +29,7 @@ export function setupAuth(app: Express) {
   });
 
   // Login
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", async (req: Request, res) => {
     try {
       const { email, password } = req.body;
 
@@ -37,7 +50,9 @@ export function setupAuth(app: Express) {
         photoURL: user.photoURL,
       };
 
-      req.session.user = sessionUser;
+      if (req.session) {
+        req.session.user = sessionUser;
+      }
       res.json({ user: sessionUser });
     } catch (error) {
       console.error("Login error:", error);
@@ -46,7 +61,7 @@ export function setupAuth(app: Express) {
   });
 
   // Register
-  app.post("/api/auth/register", async (req, res) => {
+  app.post("/api/auth/register", async (req: Request, res) => {
     try {
       const { email, password } = req.body;
 
@@ -69,7 +84,9 @@ export function setupAuth(app: Express) {
         photoURL: user.photoURL,
       };
 
-      req.session.user = sessionUser;
+      if (req.session) {
+        req.session.user = sessionUser;
+      }
       res.json({ user: sessionUser });
     } catch (error) {
       console.error("Registration error:", error);

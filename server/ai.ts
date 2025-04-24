@@ -2,10 +2,6 @@ import { Trade } from "@shared/schema";
 
 const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
 
-if (!PERPLEXITY_API_KEY) {
-  throw new Error("PERPLEXITY_API_KEY is required");
-}
-
 export async function generateTradeInsights(trades: Trade[]): Promise<string> {
   if (!trades.length) {
     return "No trades available for analysis.";
@@ -45,6 +41,10 @@ Please provide:
 Keep the response concise and actionable.`;
 
   try {
+    if (!PERPLEXITY_API_KEY) {
+      throw new Error("PERPLEXITY_API_KEY is not set. Please configure your API key.");
+    }
+    
     const response = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
       headers: {
