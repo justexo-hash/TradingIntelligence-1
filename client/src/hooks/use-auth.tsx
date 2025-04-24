@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import React, { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 type User = {
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   // Check session on mount
-  useState(() => {
+  useEffect(() => {
     fetch('/api/auth/session')
       .then(res => res.json())
       .then(data => {
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
-  });
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {

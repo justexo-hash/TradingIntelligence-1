@@ -147,8 +147,13 @@ export function setupAuth(app: Express) {
 
   // Auth middleware for API routes
   app.use("/api", (req: any, res: any, next: any) => {
-    // Allow development mode bypass
-    if (process.env.NODE_ENV !== 'production') {
+    // Skip auth check for session endpoint and auth-related endpoints
+    if (req.path === '/auth/session' || 
+        req.path === '/auth/login' || 
+        req.path === '/auth/register' || 
+        req.path === '/auth/forgot-password' || 
+        req.path === '/auth/reset-password' ||
+        req.path === '/shared-trades') {
       return next();
     }
 
