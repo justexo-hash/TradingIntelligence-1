@@ -286,10 +286,10 @@ export default function TradeForm({ editingTrade }: TradeFormProps) {
                               )}
                             </div>
                           </div>
-                          {tokenInfo.marketCap && (
+                          {tokenInfo.usdMarketCap && (
                             <p className="text-xs">
                               Market Cap:{" "}
-                              {Number(tokenInfo.marketCap).toFixed(2)} SOL
+                              {tokenInfo.usdMarketCap}
                             </p>
                           )}
                         </div>
