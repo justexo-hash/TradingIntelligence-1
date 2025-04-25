@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Load environment variables from .env file
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import cors from "cors";
@@ -6,6 +7,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
 import { setupAuth } from "./auth";
+import cron from "node-cron";
+import { fetchAllTrackedTrades } from "./trade-fetcher";
 
 // Configure CORS
 const corsOptions = {
@@ -105,5 +108,25 @@ app.use((req, res, next) => {
   const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);
+
+    // Schedule the trade fetcher job
+    // Runs every 30 minutes
+    const fetchSchedule = '*/30 * * * *';
+    log(`Scheduling trade fetcher job with schedule: ${fetchSchedule}`);
+    cron.schedule(fetchSchedule, async () => {
+      log("Running scheduled trade fetcher job...");
+      await fetchAllTrackedTrades();
+      log("Scheduled trade fetcher job finished.");
+    });
+
+    // Optional: Run once immediately on startup (uncomment if needed)
+    
+    log("Running initial trade fetch on startup...");
+    fetchAllTrackedTrades().then(() => {
+      log("Initial trade fetch complete.");
+    }).catch(error => {
+      log(`Initial trade fetch failed: ${error}`);
+    });
+    
   });
 })();

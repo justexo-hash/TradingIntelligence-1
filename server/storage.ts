@@ -1,8 +1,24 @@
 import { eq, sql, and } from "drizzle-orm";
-import { trades, journals, insights, users, sharedTrades, achievements, resources, tradeReviews } from "@shared/schema";
-import type { User, Trade, Journal, Insight, SharedTrade, Achievement, Resource, TradeReview } from "@shared/schema";
-import type { InsertUser, InsertSharedTrade, InsertAchievement, InsertResource, InsertTradeReview } from "@shared/schema";
+import { trades, journals, insights, users, sharedTrades, achievements, resources, tradeReviews, trackedWallets, sessions, tokenSummaries } from "@shared/schema";
+import type { User, Trade, Journal, Insight, SharedTrade, Achievement, Resource, TradeReview, TrackedWallet, ActivePosition, GroupedTradeHistory, TokenSummary, UpsertTokenSummary } from "@shared/schema";
+import type { InsertUser, InsertSharedTrade, InsertAchievement, InsertResource, InsertTradeReview, InsertTrackedWallet } from "@shared/schema";
 import { db } from "./db";
+import { log } from "./vite";
+
+// Define structure for Aggregated Position Data
+export interface ActivePosition { /* ... existing fields ... */ }
+
+// Define a type for the aggregation accumulator
+interface HistoryAccumulator {
+    tokenName: string | null;
+    tokenSymbol: string | null;
+    tokenImage: string | null;
+    totalTokenBought: number;
+    totalTokenSold: number;
+    totalSolSpent: number;
+    totalSolReceived: number;
+    lastActivityDate: Date;
+}
 
 export interface IStorage {
   // Users
@@ -20,6 +36,8 @@ export interface IStorage {
   deleteTrade(id: number): Promise<void>;
   getTradesByUser(userId: number): Promise<Trade[]>;
   getTradesByDate(userId: number, date: Date): Promise<Trade[]>;
+  // Check if a trade exists by signature for a user
+  tradeExistsBySignature(userId: number, signature: string): Promise<boolean>;
 
   // Shared Trades
   createSharedTrade(trade: InsertSharedTrade): Promise<SharedTrade>;
@@ -49,6 +67,22 @@ export interface IStorage {
   // Insights
   createInsight(insight: Omit<Insight, "id" | "date">): Promise<Insight>;
   getInsightsByUser(userId: number): Promise<Insight[]>;
+
+  // Tracked Wallets
+  createTrackedWallet(wallet: InsertTrackedWallet): Promise<TrackedWallet>;
+  getTrackedWalletsByUser(userId: number): Promise<TrackedWallet[]>;
+  getTrackedWalletByAddress(userId: number, address: string): Promise<TrackedWallet | undefined>;
+  deleteTrackedWallet(userId: number, address: string): Promise<boolean>;
+
+  // Active Positions
+  getActivePositionsByUser(userId: number): Promise<ActivePosition[]>;
+
+  // Grouped Trade History
+  getGroupedTradeHistoryByUser(userId: number): Promise<GroupedTradeHistory[]>;
+
+  // Token Summaries
+  getTokenSummary(userId: number, contractAddress: string): Promise<TokenSummary | undefined>;
+  upsertTokenSummary(data: UpsertTokenSummary): Promise<TokenSummary>; // Handles create or update
 }
 
 export class DatabaseStorage implements IStorage {
@@ -112,6 +146,17 @@ export class DatabaseStorage implements IStorage {
           eq(trades.date, date)
         )
       );
+  }
+
+  async tradeExistsBySignature(userId: number, signature: string): Promise<boolean> {
+    const [trade] = await db.select({ id: trades.id })
+      .from(trades)
+      .where(and(
+        eq(trades.userId, userId),
+        eq(trades.transactionSignature, signature)
+      ))
+      .limit(1);
+    return !!trade;
   }
 
   async createSharedTrade(trade: InsertSharedTrade): Promise<SharedTrade> {
@@ -210,11 +255,250 @@ export class DatabaseStorage implements IStorage {
   async getInsightsByUser(userId: number): Promise<Insight[]> {
     return db.select().from(insights).where(eq(insights.userId, userId));
   }
+
   async updateUserPassword(id: number, passwordHash: string): Promise<void> {
     await db.update(users)
       .set({ passwordHash })
       .where(eq(users.id, id));
   }
+
+  // --- Tracked Wallet Methods ---
+
+  async createTrackedWallet(wallet: InsertTrackedWallet): Promise<TrackedWallet> {
+    const [newWallet] = await db.insert(trackedWallets).values(wallet).returning();
+    return newWallet;
+  }
+
+  async getTrackedWalletsByUser(userId: number): Promise<TrackedWallet[]> {
+    return db.select().from(trackedWallets).where(eq(trackedWallets.userId, userId)).orderBy(trackedWallets.createdAt);
+  }
+
+  async getTrackedWalletByAddress(userId: number, address: string): Promise<TrackedWallet | undefined> {
+    const [wallet] = await db.select()
+      .from(trackedWallets)
+      .where(and(
+        eq(trackedWallets.userId, userId),
+        eq(trackedWallets.address, address)
+      ));
+    return wallet;
+  }
+
+  async deleteTrackedWallet(userId: number, address: string): Promise<boolean> {
+    const result = await db.delete(trackedWallets)
+      .where(and(
+        eq(trackedWallets.userId, userId),
+        eq(trackedWallets.address, address)
+      ));
+    // Check if any row was actually deleted
+    // Note: Drizzle's delete result might vary by driver; adjust if needed.
+    // Assuming result indicates rows affected or similar
+    return (result?.rowCount ?? 0) > 0; // Safely check rowCount
+  }
+
+  // --- Active Position Calculation ---
+  async getActivePositionsByUser(userId: number): Promise<ActivePosition[]> {
+    // Fetch all trades for the user
+    const userTrades = await db.select().from(trades).where(eq(trades.userId, userId));
+
+    // Aggregate in memory
+    const positions: { [key: string]: Omit<ActivePosition, 'userId' | 'contractAddress' | 'avgBuyPriceSol' | 'realizedPnlSol'> & { tokenBoughtRaw: number; solSpentRaw: number } } = {};
+
+    for (const trade of userTrades) {
+      const key = trade.contractAddress;
+      if (!positions[key]) {
+        positions[key] = {
+          tokenName: trade.tokenName,
+          tokenSymbol: trade.tokenSymbol,
+          tokenImage: trade.tokenImage,
+          totalTokenBought: "0",
+          totalTokenSold: "0",
+          remainingTokenAmount: "0",
+          totalSolSpent: "0",
+          totalSolReceived: "0",
+          tokenBoughtRaw: 0,
+          solSpentRaw: 0,
+        };
+      }
+
+      const position = positions[key];
+      const tokenAmount = parseFloat(trade.tokenAmount || "0"); // tokenAmount should not be null based on schema+fetcher
+      const solBuyAmount = parseFloat(trade.buyAmount || "0");
+      const solSellAmount = parseFloat(trade.sellAmount || "0");
+
+      if (solBuyAmount > 0) { // This was a buy trade
+        position.totalTokenBought = (parseFloat(position.totalTokenBought) + tokenAmount).toString();
+        position.totalSolSpent = (parseFloat(position.totalSolSpent) + solBuyAmount).toString();
+        position.tokenBoughtRaw += tokenAmount;
+        position.solSpentRaw += solBuyAmount;
+      } else if (solSellAmount > 0) { // This was a sell trade
+        position.totalTokenSold = (parseFloat(position.totalTokenSold) + tokenAmount).toString();
+        position.totalSolReceived = (parseFloat(position.totalSolReceived) + solSellAmount).toString();
+      }
+    }
+
+    // Calculate remaining amounts, PNL, Avg Price and format
+    const result: ActivePosition[] = Object.entries(positions)
+      .map(([contractAddress, pos]) => {
+        const remaining = parseFloat(pos.totalTokenBought) - parseFloat(pos.totalTokenSold);
+        // Avoid division by zero
+        const avgBuyPrice = pos.tokenBoughtRaw > 0 ? (pos.solSpentRaw / pos.tokenBoughtRaw).toFixed(9) : null; // Using more precision for avg price
+        const realizedPnl = parseFloat(pos.totalSolReceived) - parseFloat(pos.totalSolSpent);
+        
+        // Only return positions with a remaining balance > 0 (or a small epsilon)
+        if (remaining > 0.000001) {
+            return {
+                userId,
+                contractAddress,
+                tokenName: pos.tokenName,
+                tokenSymbol: pos.tokenSymbol,
+                tokenImage: pos.tokenImage,
+                totalTokenBought: pos.totalTokenBought,
+                totalTokenSold: pos.totalTokenSold,
+                remainingTokenAmount: remaining.toString(),
+                totalSolSpent: pos.totalSolSpent,
+                totalSolReceived: pos.totalSolReceived,
+                avgBuyPriceSol: avgBuyPrice,
+                realizedPnlSol: realizedPnl.toString(), // Note: This is PNL for *all* trades of this token, not just realized from sales vs buys
+            };
+        }
+        return null; 
+      })
+      .filter((p): p is ActivePosition => p !== null); // Filter out nulls and type guard
+
+    return result;
+  }
+
+  // --- Grouped Trade History Calculation ---
+  async getGroupedTradeHistoryByUser(userId: number): Promise<GroupedTradeHistory[]> {
+    log(`[GroupedHistory] Fetching trades for user ${userId}`);
+    const userTrades = await db.select().from(trades).where(eq(trades.userId, userId));
+    log(`[GroupedHistory] Found ${userTrades.length} raw trades for user ${userId}`);
+
+    // Use the specific accumulator type
+    const history: { [key: string]: HistoryAccumulator } = {};
+
+    for (const trade of userTrades) {
+      try { 
+          const key = trade.contractAddress;
+          // Log the date of the trade being processed
+          log(`[GroupedHistory] Processing trade ${trade.id} with date: ${trade.date}`); 
+          
+          if (!history[key]) {
+            // Initialize accumulator with correct types
+            history[key] = {
+              tokenName: trade.tokenName,
+              tokenSymbol: trade.tokenSymbol,
+              tokenImage: trade.tokenImage,
+              totalTokenBought: 0,
+              totalTokenSold: 0,
+              totalSolSpent: 0,
+              totalSolReceived: 0,
+              lastActivityDate: trade.date,
+            };
+          }
+
+          const item = history[key];
+          log(`[GroupedHistory] Processing trade ${trade.id}, tokenAmount: ${trade.tokenAmount}, buyAmount: ${trade.buyAmount}, sellAmount: ${trade.sellAmount}`);
+          const tokenAmount = parseFloat(trade.tokenAmount || "0");
+          const solBuyAmount = parseFloat(trade.buyAmount || "0");
+          const solSellAmount = parseFloat(trade.sellAmount || "0");
+          
+          if (isNaN(tokenAmount) || isNaN(solBuyAmount) || isNaN(solSellAmount)) {
+              log(`[GroupedHistory] Found NaN amounts for trade ${trade.id}. Skipping this trade.`);
+              continue; 
+          }
+
+          // Calculations use numbers directly
+          if (solBuyAmount > 0) { 
+            item.totalTokenBought += tokenAmount;
+            item.totalSolSpent += solBuyAmount;
+          } else if (solSellAmount > 0) { 
+            item.totalTokenSold += tokenAmount;
+            item.totalSolReceived += solSellAmount;
+          }
+
+          // Update last activity date if this trade is newer
+          if (trade.date > item.lastActivityDate) {
+            log(`[GroupedHistory] Updating lastActivityDate for ${key} from ${item.lastActivityDate} to ${trade.date}`);
+            item.lastActivityDate = trade.date;
+          }
+      } catch (innerError) {
+          log(`[GroupedHistory] Error processing individual trade ${trade?.id}: ${innerError}`);
+          continue; 
+      }
+    }
+
+    log(`[GroupedHistory] Aggregated ${Object.keys(history).length} tokens`);
+
+    // Map the accumulator results
+    const mappedResults = Object.entries(history)
+      .map(([contractAddress, item]): GroupedTradeHistory | null => { 
+         try { 
+            const realizedPnl = item.totalSolReceived - item.totalSolSpent;
+            return {
+                userId,
+                contractAddress,
+                tokenName: item.tokenName,
+                tokenSymbol: item.tokenSymbol,
+                tokenImage: item.tokenImage,
+                totalTokenBought: item.totalTokenBought.toString(), 
+                totalTokenSold: item.totalTokenSold.toString(),
+                totalSolSpent: item.totalSolSpent.toString(),
+                totalSolReceived: item.totalSolReceived.toString(),
+                realizedPnlSol: realizedPnl.toString(), 
+                lastActivityDate: item.lastActivityDate,
+            };
+         } catch (mapError) {
+            log(`[GroupedHistory] Error mapping final result for ${contractAddress}: ${mapError}`);
+            return null; 
+         }
+      });
+      
+    // Filter out null values explicitly
+    const validResults = mappedResults.filter(p => p !== null);
+
+    // Sort the valid results (now guaranteed to be GroupedTradeHistory[])
+    const sortedResults = (validResults as GroupedTradeHistory[]).sort((a, b) => {
+        // Defensive check for date objects, though filtering nulls should prevent issues
+        const timeA = a?.lastActivityDate?.getTime() ?? 0;
+        const timeB = b?.lastActivityDate?.getTime() ?? 0;
+        return timeB - timeA; 
+    });
+
+    log(`[GroupedHistory] Returning ${sortedResults.length} grouped history items for user ${userId}`);
+    return sortedResults;
+  }
+  // --- End Grouped Trade History Calculation ---
+
+  // --- Token Summary Methods ---
+  async getTokenSummary(userId: number, contractAddress: string): Promise<TokenSummary | undefined> {
+    const [summary] = await db.select()
+      .from(tokenSummaries)
+      .where(and(
+        eq(tokenSummaries.userId, userId),
+        eq(tokenSummaries.contractAddress, contractAddress)
+      ));
+    return summary;
+  }
+
+  async upsertTokenSummary(data: UpsertTokenSummary): Promise<TokenSummary> {
+    // Use Drizzle's insert...onConflictDoUpdate to handle insert or update
+    const [result] = await db.insert(tokenSummaries)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [tokenSummaries.userId, tokenSummaries.contractAddress], // Unique constraint columns
+        set: { // Fields to update on conflict (excluding keys and createdAt)
+          notes: data.notes,
+          setup: data.setup,
+          emotion: data.emotion,
+          mistakes: data.mistakes,
+          updatedAt: new Date(), // Manually set updatedAt on conflict
+        }
+      })
+      .returning(); // Return the inserted or updated row
+    return result;
+  }
+  // --- End Token Summary Methods ---
 }
 
 export const storage = new DatabaseStorage();

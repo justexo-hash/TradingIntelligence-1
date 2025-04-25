@@ -5,6 +5,8 @@ import {
   insertTradeSchema,
   insertJournalSchema,
   insertSharedTradeSchema,
+  insertTrackedWalletSchema,
+  upsertTokenSummarySchema,
 } from "@shared/schema";
 import { generateTradeInsights } from "./ai";
 import { z } from "zod";
@@ -536,6 +538,217 @@ export function registerRoutes(app: Express) {
       }
     },
   );
+
+  // Tracked Wallets
+  app.get(
+    "/api/wallets",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        const wallets = await storage.getTrackedWalletsByUser(req.user!.id);
+        res.json(wallets);
+      } catch (error) {
+        console.error("Error fetching tracked wallets:", error);
+        res.status(500).json({ error: "Failed to fetch tracked wallets" });
+      }
+    }
+  );
+
+  app.post(
+    "/api/wallets",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        // Basic Solana address validation (length and base58 characters)
+        // A more robust validation might involve specific libraries if needed
+        const addressSchema = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address format");
+        const validationResult = addressSchema.safeParse(req.body.address);
+
+        if (!validationResult.success) {
+          return res.status(400).json({ error: validationResult.error.errors[0].message });
+        }
+
+        const walletData = insertTrackedWalletSchema.parse({
+          userId: req.user!.id,
+          address: validationResult.data, // Use validated address
+        });
+
+        // Check if wallet already exists for this user
+        const existing = await storage.getTrackedWalletByAddress(req.user!.id, walletData.address);
+        if (existing) {
+          return res.status(409).json({ error: "Wallet address already tracked" });
+        }
+
+        const result = await storage.createTrackedWallet(walletData);
+        res.status(201).json(result);
+      } catch (error) {
+        // Handle potential Zod validation errors specifically
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ error: "Invalid wallet data", details: error.errors });
+        }
+        console.error("Error adding tracked wallet:", error);
+        res.status(500).json({ error: "Failed to add tracked wallet" });
+      }
+    }
+  );
+
+  app.delete(
+    "/api/wallets/:address",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        const address = req.params.address;
+        // Basic validation for the address from params
+        const addressSchema = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, "Invalid Solana address format");
+        const validationResult = addressSchema.safeParse(address);
+
+        if (!validationResult.success) {
+          return res.status(400).json({ error: validationResult.error.errors[0].message });
+        }
+
+        const deleted = await storage.deleteTrackedWallet(
+          req.user!.id,
+          validationResult.data
+        );
+
+        if (deleted) {
+          res.sendStatus(204); // No Content
+        } else {
+          // Could happen if the wallet address didn't exist for the user
+          res.status(404).json({ error: "Tracked wallet not found" });
+        }
+      } catch (error) {
+        console.error("Error deleting tracked wallet:", error);
+        res.status(500).json({ error: "Failed to delete tracked wallet" });
+      }
+    }
+  );
+
+  // --- Active Positions Endpoint ---
+  app.get(
+    "/api/positions",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        const positions = await storage.getActivePositionsByUser(req.user!.id);
+        res.json(positions);
+      } catch (error) {
+        console.error("Error fetching active positions:", error);
+        res.status(500).json({ error: "Failed to fetch active positions" });
+      }
+    }
+  );
+  // --- End Active Positions Endpoint ---
+
+  // --- Grouped Trade History Endpoint ---
+  app.get(
+    "/api/trades/grouped",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      let history: GroupedTradeHistory[] = []; 
+      try {
+        history = await storage.getGroupedTradeHistoryByUser(req.user!.id);
+        console.log(`[GroupedAPI] Storage returned ${history.length} items for user ${req.user!.id}`);
+
+        if (history.length > 0) {
+          console.log(`[GroupedAPI] Sample item BEFORE map:`, history[0]);
+        }
+
+        let serializableHistory;
+        try {
+          serializableHistory = history.map(item => {
+            const isoDate = item.lastActivityDate instanceof Date 
+              ? item.lastActivityDate.toISOString() 
+              : String(item.lastActivityDate);
+            // Log the date being serialized for a sample item
+            if (item.contractAddress === history[0]?.contractAddress) { // Log first item's date
+                 console.log(`[GroupedAPI] Serializing date for ${item.contractAddress}: ${isoDate}`);
+            }
+            return {
+              ...item,
+              lastActivityDate: isoDate, 
+            };
+          });
+          if (serializableHistory.length > 0) {
+             console.log(`[GroupedAPI] Sample item AFTER map:`, serializableHistory[0]);
+          }
+        } catch (mappingError) {
+           console.error(`[GroupedAPI] Error during date mapping: ${mappingError}`);
+           return res.status(500).json({ error: "Failed to process trade history data" });
+        }
+
+        console.log(`[GroupedAPI] Attempting to send ${serializableHistory.length} items.`);
+        res.json(serializableHistory);
+
+      } catch (error) {
+        console.error("Error fetching grouped trade history:", error);
+         console.log(`[GroupedAPI] Error occurred after fetching ${history?.length ?? 'unknown'} items from storage.`);
+        res.status(500).json({ error: "Failed to fetch grouped trade history" });
+      }
+    }
+  );
+  // --- End Grouped Trade History Endpoint ---
+
+  // --- GET Token Summary Endpoint ---
+  app.get(
+    "/api/trades/summary/:contractAddress",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        const { contractAddress } = req.params;
+        const summary = await storage.getTokenSummary(req.user!.id, contractAddress);
+        if (!summary) {
+          // Return a default empty summary object if none exists yet
+          return res.json({
+            userId: req.user!.id,
+            contractAddress: contractAddress,
+            notes: null,
+            setup: [],
+            emotion: [],
+            mistakes: [],
+            // Add createdAt/updatedAt if needed, or keep minimal
+          });
+        }
+        res.json(summary);
+      } catch (error) {
+        console.error(`Error fetching token summary for ${req.params.contractAddress}:`, error);
+        res.status(500).json({ error: "Failed to fetch token summary" });
+      }
+    }
+  );
+  // --- End GET Token Summary Endpoint ---
+
+  // --- Upsert Token Summary Endpoint (PATCH) ---
+  app.patch(
+    "/api/trades/summary/:contractAddress",
+    requireAuth,
+    async (req: AuthenticatedRequest, res: Response) => {
+      try {
+        const { contractAddress } = req.params;
+        // Validate payload against schema (only journaling fields)
+        const validationResult = upsertTokenSummarySchema.pick({ 
+          notes: true, setup: true, emotion: true, mistakes: true 
+        }).safeParse(req.body);
+
+        if (!validationResult.success) {
+          return res.status(400).json({ error: "Invalid summary data", details: validationResult.error.errors });
+        }
+
+        const dataToUpsert: UpsertTokenSummary = {
+          userId: req.user!.id,
+          contractAddress: contractAddress,
+          ...validationResult.data, // Spread validated journaling fields
+        };
+
+        const result = await storage.upsertTokenSummary(dataToUpsert);
+        res.json(result);
+      } catch (error) {
+        console.error(`Error upserting token summary for ${req.params.contractAddress}:`, error);
+        res.status(500).json({ error: "Failed to save token summary" });
+      }
+    }
+  );
+  // --- End Upsert Token Summary Endpoint ---
 
   const httpServer = createServer(app);
   return httpServer;
